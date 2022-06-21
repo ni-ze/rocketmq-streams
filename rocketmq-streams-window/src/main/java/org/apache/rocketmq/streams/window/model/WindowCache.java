@@ -76,7 +76,6 @@ public abstract class WindowCache extends
     public void initMiniBatch() {
         shuffleMsgCache  = new MiniBatchMsgCache(new WindowCache.MutilMsgMergerAndCompressFlushCallBack(),(IShuffleKeyGenerator) shuffleChannel.getWindow(),shuffleChannel.getWindow());
 
-
         shuffleMsgCache.openAutoFlush();
     }
 
