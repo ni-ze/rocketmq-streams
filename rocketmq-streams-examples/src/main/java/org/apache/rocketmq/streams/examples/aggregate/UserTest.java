@@ -168,9 +168,9 @@ public class UserTest {
 
                     return message;
                 }))
-                .window(TumblingWindow.of(Time.seconds(5)))
+                .window(TumblingWindow.of(Time.seconds(3)))
                 .groupBy("traceId")
-                .addUDAF(new TestUDAF(),"spanId","spanIndex")
+                .addUDAF(new TestUDAF(),"traceList","spanIndex")
                 .setLocalStorageOnly(true)
                 .toDataStream()
                 .toPrint(1)

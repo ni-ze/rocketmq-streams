@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TestUDAF implements IAccumulator<List<JSONObject>, TestUDAF.Trace> {
+public class TestUDAF implements IAccumulator<List<String>, TestUDAF.Trace> {
     public static class Trace {
         public Map<String, JSONObject> spanId2Span = new HashMap<>();
 
@@ -34,7 +34,7 @@ public class TestUDAF implements IAccumulator<List<JSONObject>, TestUDAF.Trace> 
 
         public Map<String, List<String>> parent2Children = new HashMap<>();
 
-        public List<JSONObject> result = new ArrayList<>();
+        public List<String> result = new ArrayList<>();
     }
 
     @Override
@@ -43,9 +43,7 @@ public class TestUDAF implements IAccumulator<List<JSONObject>, TestUDAF.Trace> 
     }
 
     @Override
-    public List<JSONObject> getValue(Trace accumulator) {
-
-
+    public List<String> getValue(Trace accumulator) {
         return accumulator.result;
     }
 
@@ -54,53 +52,18 @@ public class TestUDAF implements IAccumulator<List<JSONObject>, TestUDAF.Trace> 
         if (parameters == null || parameters.length == 0) {
             return;
         }
-
         if (parameters.length != 1) {
             throw new IllegalArgumentException("parameters length must be one");
         }
 
         JSONObject param = (JSONObject) parameters[0];
+        String result = param.toJSONString();
 
         if (accumulator == null) {
             accumulator = new Trace();
         }
 
-        accumulator.result.add(param);
-
-
-//        Map<String, Object> innerMap = param.getInnerMap();
-//
-//        if (accumulator == null) {
-//            accumulator = new Trace();
-//        }
-//
-//        for (String key : innerMap.keySet()) {
-//            JSONObject value = (JSONObject)innerMap.get(key);
-//            accumulator.spanId2Span.put(key, value);
-//
-//            String parentSpanId = value.getString("parentSpanId");
-//            List<String> children = null;
-//
-//            if (!StringUtils.isEmpty(parentSpanId)) {
-//                accumulator.spanId2Parent.put(key, parentSpanId);
-//
-//            } else {
-//                accumulator.spanId2Parent.put(key, "root");
-//
-//                parentSpanId = "root";
-//
-//            }
-//
-//
-//            children = accumulator.parent2Children.get(parentSpanId);
-//            if (children == null) {
-//                children = new ArrayList<>();
-//            }
-//            children.add(key);
-//            accumulator.parent2Children.put(parentSpanId, children);
-//        }
-
-
+        accumulator.result.add(result);
     }
 
     @Override
