@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -128,6 +129,8 @@ public abstract class AbstractSource extends BasedConfigurable implements ISourc
      * 做checkpoint的管理
      */
     protected transient CheckPointManager checkPointManager = null;
+
+    private transient Properties properties = new Properties();
 
     @Override
     protected boolean initConfigurable() {
@@ -771,4 +774,15 @@ public abstract class AbstractSource extends BasedConfigurable implements ISourc
     }
 
 
+    public Properties getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
+
+    public void addProperties(String key, Object value) {
+        this.properties.put(key, value);
+    }
 }

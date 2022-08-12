@@ -23,15 +23,16 @@ import org.apache.rocketmq.streams.client.source.DataStreamSource;
 import org.apache.rocketmq.streams.client.strategy.WindowStrategy;
 import org.apache.rocketmq.streams.client.transform.window.Time;
 import org.apache.rocketmq.streams.client.transform.window.TumblingWindow;
+import org.apache.rocketmq.streams.common.configure.Constants;
 import org.apache.rocketmq.streams.examples.send.ProducerFromFile;
+import java.util.Properties;
+import static org.apache.rocketmq.streams.examples.aggregate.Constant.NAMESRV_ADDRESS;
 
 /**
  * 消费 rocketmq 中的数据，10s一个窗口，并按照 ProjectName 和 LogStore 两个字段联合分组统计，两个字段的值相同，分为一组。
  *
  * 分别统计每组的InFlow和OutFlow两字段累计和。
  */
-import static org.apache.rocketmq.streams.examples.aggregate.Constant.NAMESRV_ADDRESS;
-
 public class RocketMQWindowExample {
 
     /**
@@ -48,12 +49,18 @@ public class RocketMQWindowExample {
         }
         System.out.println("begin streams code.");
 
+        Properties properties = new Properties();
+        properties.put(Constants.DEFAULT_BODY_SERDE_CLASS_CONFIG, new Object());
+
         DataStreamSource source = StreamBuilder.dataStream("namespace", "pipeline");
         source.fromRocketmq(
                 "windowTopic",
                 "windowTopicGroup",
+                "*",
                 false,
-                NAMESRV_ADDRESS)
+                NAMESRV_ADDRESS,
+                null,
+                properties)
                 .filter((message) -> {
                     try {
                         JSONObject.parseObject((String) message);
