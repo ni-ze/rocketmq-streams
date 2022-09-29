@@ -23,6 +23,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -41,18 +42,20 @@ import org.apache.rocketmq.streams.common.utils.DateUtil;
  */
 public class FileSource extends AbstractBatchSource {
 
-    /**
-     * 文件全路径。如果目录是环境变量，可以写成evnDir/文件名
-     */
-    @ENVDependence
-    private String filePath;
+//    private String filePath;
+
+    private Properties properties;
 
     protected transient BufferedReader reader;
     protected transient ExecutorService executorService;
 
-    public FileSource(String filePath) {
+    public FileSource() {
+        setType(ISource.TYPE);
+    }
+
+    public FileSource(Properties properties) {
         this();
-        this.filePath = filePath;
+        this.properties = properties;
     }
 
     @Override
@@ -227,10 +230,6 @@ public class FileSource extends AbstractBatchSource {
             String realFilePath = filePath;
             throw new RuntimeException("close error " + realFilePath, e);
         }
-    }
-
-    public FileSource() {
-        setType(ISource.TYPE);
     }
 
     public String getFilePath() {

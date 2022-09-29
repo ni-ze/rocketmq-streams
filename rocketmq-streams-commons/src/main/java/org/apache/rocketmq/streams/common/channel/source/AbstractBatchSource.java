@@ -33,29 +33,13 @@ import org.apache.rocketmq.streams.common.utils.RuntimeUtil;
  */
 public abstract class AbstractBatchSource extends AbstractSource {
 
-    /**
-     * 一个批次能处理的最大数据量
-     */
-    private static final Long MAX_BATCH_SIZE = 10000000000L;
 
-    /**
-     * 因为是批次数据，所以只有一个queue
-     */
-    private static final String BATCH_MESSAGE_QUEUE_ID = "1";
-
-    /**
-     * 定时发checkpoint
-     */
     protected transient ScheduledExecutorService scheduled;
 
-    /**
-     * 模拟offset生成，递增产生
-     */
+
     protected transient AtomicLong offsetGenerator;
 
-    /**
-     * 最后一次提交的时间，用来判断是否需要checkpoint
-     */
+
     protected transient long lastCommitTime;
 
     private transient BatchMessageOffset progress;//如果需要保存offset，通过这个对象保存

@@ -114,8 +114,7 @@ public class PipelineBuilder implements Serializable {
      * @param source 数据源
      */
     public void setSource(ISource<?> source) {
-        source.createStageChain(this);
-        source.addConfigurables(this);
+        this.addConfigurables(source);
         this.pipeline.setSource(source);
     }
 
@@ -237,9 +236,7 @@ public class PipelineBuilder implements Serializable {
         return NameCreatorContext.get().createNewName(this.pipelineName, type);
     }
 
-    /**
-     * 保存中间产生的结果
-     */
+
     public void addConfigurables(IConfigurable configurable) {
         if (isBreak) {
             return;
@@ -247,7 +244,7 @@ public class PipelineBuilder implements Serializable {
 
         if (configurable != null) {
             if (StringUtil.isEmpty(configurable.getNameSpace())) {
-                configurable.setNameSpace(getPipelineNameSpace());
+                configurable.setNameSpace(this.pipelineNameSpace);
             }
             if (StringUtil.isEmpty(configurable.getConfigureName())) {
                 configurable.setConfigureName(createConfigurableName(configurable.getType()));

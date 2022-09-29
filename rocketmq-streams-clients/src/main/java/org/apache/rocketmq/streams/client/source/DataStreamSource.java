@@ -35,6 +35,8 @@ package org.apache.rocketmq.streams.client.source;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Sets;
+
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.rocketmq.remoting.RPCHook;
@@ -48,6 +50,8 @@ import org.apache.rocketmq.streams.common.topology.builder.PipelineBuilder;
 import org.apache.rocketmq.streams.mqtt.source.PahoSource;
 import org.apache.rocketmq.streams.schema.SchemaConfig;
 import org.apache.rocketmq.streams.source.RocketMQSource;
+
+import javax.xml.crypto.Data;
 
 public class DataStreamSource {
     protected PipelineBuilder mainPipelineBuilder;
@@ -80,13 +84,9 @@ public class DataStreamSource {
         return new DataStream(this.mainPipelineBuilder, this.otherPipelineBuilders, null);
     }
 
-    public DataStream fromFile(String filePath) {
-        return fromFile(filePath, true);
-    }
 
-    public DataStream fromFile(String filePath, Boolean isJsonData) {
-        FileSource fileChannel = new FileSource(filePath);
-        fileChannel.setJsonData(isJsonData);
+    public DataStream fromFile(Properties properties) {
+        FileSource fileChannel = new FileSource(properties);
         this.mainPipelineBuilder.setSource(fileChannel);
         return new DataStream(this.mainPipelineBuilder, this.otherPipelineBuilders, null);
     }
