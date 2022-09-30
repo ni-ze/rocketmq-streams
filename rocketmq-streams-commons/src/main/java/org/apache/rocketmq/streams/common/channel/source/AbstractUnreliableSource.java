@@ -111,13 +111,7 @@ public abstract class AbstractUnreliableSource extends AbstractBatchSource {
         return false;
     }
 
-    /**
-     * 收到消息发送出去，因为是不可靠队列，如果对象不是json，则用UserDefinedMessage处理
-     *
-     * @param t
-     * @param <T>
-     * @return
-     */
+
     public <T> AbstractContext doUnreliableReceiveMessage(T t) {
         return super.doReceiveMessage(createJson(t));
     }

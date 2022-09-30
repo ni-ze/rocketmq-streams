@@ -16,12 +16,9 @@
  */
 package org.apache.rocketmq.streams.common.utils;
 
-import java.io.File;
 import java.lang.management.ManagementFactory;
 
-/**
- * get current runtime information
- */
+
 public class RuntimeUtil {
 
     public static String getPid() {
@@ -33,31 +30,12 @@ public class RuntimeUtil {
         }
     }
 
-    public static String getUserDir() {
-        try {
-            String userDir = System.getProperty("user.dir");
-            if (userDir != null) {
-                return userDir.replace("/", "-").substring(userDir.length() - 10);
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return null;
-    }
 
-    /**
-     * 获取dipper 唯一标识
-     *
-     * @return
-     */
+
     public static String getDipperInstanceId() {
 
         return MapKeyUtil.createKeyBySign("_", IPUtil.getLocalIdentification(), getPid()).replaceAll("\\.", "_");
 
     }
 
-    public static void main(String[] args) {
-        File file = new File("/tmp/" + getDipperInstanceId());
-        file.mkdirs();
-    }
 }

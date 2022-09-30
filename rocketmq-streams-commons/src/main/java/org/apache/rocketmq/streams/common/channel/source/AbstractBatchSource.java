@@ -28,9 +28,6 @@ import org.apache.rocketmq.streams.common.context.Message;
 import org.apache.rocketmq.streams.common.topology.builder.PipelineBuilder;
 import org.apache.rocketmq.streams.common.utils.RuntimeUtil;
 
-/**
- * 用批处理实现数据流 比如通过sql，定时获取数据，这类非消息队列数据源，没有offset和queueId，系统会模拟实现 也会增加offset的存储，实现断点续传
- */
 public abstract class AbstractBatchSource extends AbstractSource {
 
 
@@ -52,7 +49,6 @@ public abstract class AbstractBatchSource extends AbstractSource {
     protected boolean initConfigurable() {
         scheduled = new ScheduledThreadPoolExecutor(2);
         offsetGenerator = new AtomicLong(System.currentTimeMillis());
-        long lastCommitTime = System.currentTimeMillis();
         return super.initConfigurable();
     }
 
@@ -85,11 +81,6 @@ public abstract class AbstractBatchSource extends AbstractSource {
 
     }
 
-    public AbstractContext doReceiveMessage(String message, boolean needFlush) {
-        String queueId = getQueueId();
-        String offset = this.offsetGenerator.incrementAndGet() + "";
-        return doReceiveMessage(message, needFlush, queueId, offset);
-    }
 
     public AbstractContext doReceiveMessage(JSONObject message, boolean needFlush) {
         String queueId = getQueueId();
@@ -100,20 +91,6 @@ public abstract class AbstractBatchSource extends AbstractSource {
     @Override
     public boolean supportNewSplitFind() {
         return false;
-    }
-
-    /**
-     * 设置初始化参数和进度
-     *
-     * @param msg
-     */
-    public void setProgress(JSONObject msg) {
-        BatchMessageOffset offset = new BatchMessageOffset();
-        if (msg != null) {
-            offset.setCurrentMessage(msg.toJSONString());
-        }
-        offset.setOwnerType(this.getType());
-        this.progress = offset;
     }
 
     @Override
@@ -142,31 +119,7 @@ public abstract class AbstractBatchSource extends AbstractSource {
         return false;
     }
 
-    /**
-     * 对于批量接入的消息，可以在消息中加入checkpoint，在这批消息执行完成后，flush所有的输出节点，确保消息至少被消费一次
-     *
-     * @param messages          这批消息会作为一个批次
-     * @param needSetCheckPoint 是否在最后一条消息加入checkpoint标志
-     * @return
-     */
-    public AbstractContext doReceiveMessage(List<JSONObject> messages, boolean needSetCheckPoint) {
-        if (messages == null || messages.size() == 0) {
-            return null;
-        }
 
-        AbstractContext context = null;
-        int i = 0;
-        for (JSONObject jsonObject : messages) {
-
-            if (i == messages.size() - 1) {
-                doReceiveMessage(jsonObject, needSetCheckPoint);
-            } else {
-                doReceiveMessage(jsonObject, false);
-            }
-            i++;
-        }
-        return context;
-    }
 
     @Override
     public boolean supportRemoveSplitFind() {
@@ -187,7 +140,4 @@ public abstract class AbstractBatchSource extends AbstractSource {
         return RuntimeUtil.getDipperInstanceId();
     }
 
-    public Long createOffset() {
-        return offsetGenerator.incrementAndGet();
-    }
-}
+ }
