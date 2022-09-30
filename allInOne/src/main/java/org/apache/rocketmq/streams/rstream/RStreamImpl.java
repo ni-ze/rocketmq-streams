@@ -35,7 +35,7 @@ import static org.apache.rocketmq.streams.OperatorNameMaker.GROUPBY_PREFIX;
 import static org.apache.rocketmq.streams.OperatorNameMaker.MAP_PREFIX;
 import static org.apache.rocketmq.streams.OperatorNameMaker.SINK_PREFIX;
 
-public class RStreamImpl<K, V> implements RStream<K, V> {
+public class RStreamImpl<T> implements RStream<T> {
     private final Pipeline pipeline;
     private final GraphNode parent;
 
@@ -45,7 +45,7 @@ public class RStreamImpl<K, V> implements RStream<K, V> {
     }
 
     @Override
-    public <OV> RStream<K, OV> map(ValueMapperAction<V, OV> mapperAction) {
+    public <OUT> RStream<OUT> map(ValueMapperAction<T, OUT> mapperAction) {
         String name = OperatorNameMaker.makeName(MAP_PREFIX);
 
         ValueActionSupplier<K, V, OV> supplier = new ValueActionSupplier<>(mapperAction);

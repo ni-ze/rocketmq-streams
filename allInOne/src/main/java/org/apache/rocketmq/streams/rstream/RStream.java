@@ -24,7 +24,7 @@ import org.apache.rocketmq.streams.function.ValueMapperAction;
 
 public interface RStream<T> {
 
-    <OUT> RStream<T> map(ValueMapperAction<T, OUT> mapperAction);
+    <OUT> RStream<OUT> map(ValueMapperAction<T, OUT> mapperAction);
 
     RStream<T> filter(FilterAction<T> predictor);
 

@@ -24,16 +24,15 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class ValueActionSupplier<K, V, OV> implements Supplier<Processor<K, V, K, OV>> {
-    private final ValueMapperAction<V, OV> valueMapperAction;
+public class ValueActionSupplier<T> implements Supplier<Processor<T>> {
+    private final ValueMapperAction<IN, OUT> valueMapperAction;
 
-
-    public ValueActionSupplier(ValueMapperAction<V, OV> valueMapperAction) {
+    public ValueActionSupplier(ValueMapperAction<IN, OUT> valueMapperAction) {
         this.valueMapperAction = valueMapperAction;
     }
 
     @Override
-    public Processor<K, V, K, OV> get() {
+    public Processor<IN, OUT> get() {
         return new ValueMapperProcessor<>(this.valueMapperAction);
     }
 

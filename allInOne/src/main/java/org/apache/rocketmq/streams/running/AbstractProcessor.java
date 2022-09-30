@@ -20,15 +20,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class AbstractProcessor<K, V, OK, OV> implements Processor<K, V, OK, OV> {
-    private final List<Processor<K, V, OK, OV>> children = new ArrayList<>();
+public abstract class AbstractProcessor<T> implements Processor<T> {
+    private final List<Processor<T>> children = new ArrayList<>();
 
     @Override
-    public void addChild(Processor<K, V, OK, OV> processor) {
+    public void addChild(Processor<T> processor) {
         children.add(processor);
     }
 
-    protected List<Processor<K, V, OK, OV>> getChildren() {
+    protected List<Processor<T>> getChildren() {
         return Collections.unmodifiableList(children);
     }
 

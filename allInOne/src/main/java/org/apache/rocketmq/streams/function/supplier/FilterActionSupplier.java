@@ -24,23 +24,23 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class FilterActionSupplier<K, V> implements Supplier<Processor<K, V, K, V>> {
-    private FilterAction<K, V> filterAction;
+public class FilterActionSupplier<T> implements Supplier<Processor<T>> {
+    private FilterAction<T> filterAction;
 
-    public FilterActionSupplier(FilterAction<K, V> filterAction) {
+    public FilterActionSupplier(FilterAction<T> filterAction) {
         this.filterAction = filterAction;
     }
 
     @Override
-    public Processor<K, V, K, V> get() {
+    public Processor<T> get() {
         return new FilterProcessor(filterAction);
     }
 
-    private class FilterProcessor extends AbstractProcessor<K, V, K, V> {
-        private final FilterAction<K, V> filterAction;
+    private class FilterProcessor extends AbstractProcessor<T> {
+        private final FilterAction<T> filterAction;
         private StreamContext  context;
 
-        public FilterProcessor(FilterAction<K, V> filterAction) {
+        public FilterProcessor(FilterAction<T> filterAction) {
             this.filterAction = filterAction;
         }
 
@@ -52,8 +52,8 @@ public class FilterActionSupplier<K, V> implements Supplier<Processor<K, V, K, V
         }
 
         @Override
-        public void process(Data<K, V> data) {
-            boolean pass = filterAction.apply(data.getKey(), data.getValue());
+        public void process(Data<T> data) {
+            boolean pass = filterAction.apply(data.getData());
             if (pass) {
                 this.context.forward(data);
             }

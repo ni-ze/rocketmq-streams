@@ -22,8 +22,8 @@ import org.apache.rocketmq.streams.topology.TopologyBuilder;
 
 import java.util.function.Supplier;
 
-public class SourceGraphNode<K, V, OK, OV> extends AbstractGraphNode {
-    private Supplier<? extends Processor<K, V, OK, OV>> supplier;
+public class SourceGraphNode<T> extends AbstractGraphNode {
+    private Supplier<? extends Processor<T>> supplier;
     private String topicName;
 
 

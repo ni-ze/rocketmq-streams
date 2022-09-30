@@ -18,13 +18,13 @@ package org.apache.rocketmq.streams.running;
 
 import org.apache.rocketmq.streams.metadata.Data;
 
-public interface Processor<K, V, OK, OV> extends AutoCloseable {
-    void addChild(Processor<K, V, OK, OV> processor);
+public interface Processor<T> extends AutoCloseable {
+    void addChild(Processor<T> processor);
 
 
     void preProcess(StreamContext context);
 
 
-    void process(Data<K, V> data);
+    void process(Data<T> data);
 
 }

@@ -16,31 +16,9 @@ package org.apache.rocketmq.streams.metadata;
  * limitations under the License.
  */
 
-public class Data<K, V> {
+public class Data<T> {
     private String sinkTopic;
-    private K key;
-    private V value;
-
-    public Data(K key, V value) {
-        this.key = key;
-        this.value = value;
-    }
-
-    public K getKey() {
-        return key;
-    }
-
-    public void setKey(K key) {
-        this.key = key;
-    }
-
-    public V getValue() {
-        return value;
-    }
-
-    public void setValue(V value) {
-        this.value = value;
-    }
+    private T data;
 
     public String getSinkTopic() {
         return sinkTopic;
@@ -50,13 +28,53 @@ public class Data<K, V> {
         this.sinkTopic = sinkTopic;
     }
 
-    public <NK> Data<NK,V> key(NK key) {
-        return new Data<>(key, value);
+    public T getData() {
+        return data;
     }
 
-    public <NV> Data<K,NV> value(NV value) {
-        return new Data<>(key, value);
+    public void setData(T data) {
+        this.data = data;
     }
+
+    //    private K key;
+//    private V value;
+//
+//    public Data(K key, V value) {
+//        this.key = key;
+//        this.value = value;
+//    }
+//
+//    public K getKey() {
+//        return key;
+//    }
+//
+//    public void setKey(K key) {
+//        this.key = key;
+//    }
+//
+//    public V getValue() {
+//        return value;
+//    }
+//
+//    public void setValue(V value) {
+//        this.value = value;
+//    }
+//
+//    public String getSinkTopic() {
+//        return sinkTopic;
+//    }
+//
+//    public void setSinkTopic(String sinkTopic) {
+//        this.sinkTopic = sinkTopic;
+//    }
+//
+//    public <NK> Data<NK,V> key(NK key) {
+//        return new Data<>(key, value);
+//    }
+//
+//    public <NV> Data<K,NV> value(NV value) {
+//        return new Data<>(key, value);
+//    }
 
     @Override
     public String toString() {

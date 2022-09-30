@@ -16,10 +16,13 @@ package org.apache.rocketmq.streams;
  * limitations under the License.
  */
 
+import org.apache.rocketmq.streams.function.FilterAction;
+import org.apache.rocketmq.streams.function.ValueMapperAction;
 import org.apache.rocketmq.streams.rstream.RStream;
 import org.apache.rocketmq.streams.rstream.StreamBuilder;
 import org.apache.rocketmq.streams.topology.TopologyBuilder;
 
+import java.util.Objects;
 import java.util.Properties;
 
 public class Demo {
@@ -29,8 +32,18 @@ public class Demo {
         RStream<String> rStream = builder.source("sourceTopic");
 
         //todo 如果使用groupBy需要定义key
-        rStream.map(value -> value)
-                .filter((key, value) -> value != null)
+        rStream.map(new ValueMapperAction<String, Integer>() {
+                    @Override
+                    public Integer convert(String value) {
+                        return value.length();
+                    }
+                })
+                .filter(new FilterAction<Integer>() {
+                    @Override
+                    public boolean apply(Integer value) {
+                        return false;
+                    }
+                })
                 .groupBy((key, value) -> (value))
                 .count()
                 .toRStream()
