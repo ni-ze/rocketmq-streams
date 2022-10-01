@@ -43,9 +43,7 @@ import org.apache.rocketmq.streams.common.interfaces.ISystemMessage;
 import org.apache.rocketmq.streams.common.topology.builder.PipelineBuilder;
 import org.apache.rocketmq.streams.common.utils.StringUtil;
 
-/**
- * 输出的接口抽象，针对json消息的场景
- */
+
 public abstract class AbstractSink extends BasedConfigurable implements ISink<AbstractSink>, ILifeCycle {
 
     private static final Log logger = LogFactory.getLog(AbstractSink.class);

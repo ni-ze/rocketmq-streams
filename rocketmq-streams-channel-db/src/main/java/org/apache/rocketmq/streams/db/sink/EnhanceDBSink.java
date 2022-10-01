@@ -42,9 +42,7 @@ import org.apache.rocketmq.streams.db.driver.orm.ORMUtil;
 import org.apache.rocketmq.streams.db.sink.sqltemplate.ISqlTemplate;
 import org.apache.rocketmq.streams.db.sink.sqltemplate.SqlTemplateFactory;
 
-/**
- * @description enhance db sink, support atomic sink and multiple sink
- */
+
 public class EnhanceDBSink extends AbstractSink {
 
     static final Log logger = LogFactory.getLog(EnhanceDBSink.class);
