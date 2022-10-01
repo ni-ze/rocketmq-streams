@@ -21,7 +21,7 @@ import org.apache.rocketmq.streams.metadata.Data;
 import java.util.List;
 
 public interface StreamContext {
-    <K, V, OK, OV> void init(List<Processor<K, V, OK, OV>> childrenProcessors);
+    <T> void init(List<Processor<T>> childrenProcessors);
 
-    <K, V> void forward(Data<K, V> data);
+    <T> void forward(T data);
 }

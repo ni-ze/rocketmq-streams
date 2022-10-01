@@ -24,7 +24,7 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class ValueActionSupplier<T> implements Supplier<Processor<T>> {
+public class ValueActionSupplier<IN, OUT> implements Supplier<Processor<IN>> {
     private final ValueMapperAction<IN, OUT> valueMapperAction;
 
     public ValueActionSupplier(ValueMapperAction<IN, OUT> valueMapperAction) {
@@ -32,16 +32,16 @@ public class ValueActionSupplier<T> implements Supplier<Processor<T>> {
     }
 
     @Override
-    public Processor<IN, OUT> get() {
+    public Processor<IN> get() {
         return new ValueMapperProcessor<>(this.valueMapperAction);
     }
 
 
-    static class ValueMapperProcessor<K, V, OK, OV> extends AbstractProcessor<K, V, OK, OV> {
-        private final ValueMapperAction<V, OV> valueMapperAction;
+    static class ValueMapperProcessor<IN, OUT> extends AbstractProcessor<IN> {
+        private final ValueMapperAction<IN,OUT> valueMapperAction;
         private StreamContext context;
 
-        public ValueMapperProcessor(ValueMapperAction<V, OV> valueMapperAction) {
+        public ValueMapperProcessor(ValueMapperAction<IN,OUT> valueMapperAction) {
             this.valueMapperAction = valueMapperAction;
         }
 
@@ -52,10 +52,9 @@ public class ValueActionSupplier<T> implements Supplier<Processor<T>> {
         }
 
         @Override
-        public void process(Data<K, V> data) {
-            OV newValue = valueMapperAction.convert(data.getValue());
-            Data<K, OV> result = new Data<>(data.getKey(), newValue);
-            this.context.forward(result);
+        public void process(IN data) {
+            OUT newValue = valueMapperAction.convert(data);
+            this.context.forward(newValue);
         }
     }
 

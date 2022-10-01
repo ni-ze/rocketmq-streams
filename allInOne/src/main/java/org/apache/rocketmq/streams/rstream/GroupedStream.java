@@ -16,10 +16,11 @@ package org.apache.rocketmq.streams.rstream;
  * limitations under the License.
  */
 
-public interface GroupedStream<K, V> {
+//todo should be <key,T>
+public interface GroupedStream<T> {
     //todo 返回的不再是GroupedStream
-    GroupedStream<K,Long> count();
+    GroupedStream<T> count();
 
-    RStream<K,V> toRStream();
+    RStream<T> toRStream();
 
 }

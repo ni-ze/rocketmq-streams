@@ -17,6 +17,13 @@ package org.apache.rocketmq.streams.state;
  */
 
 public interface StateStore<K, V> extends AutoCloseable {
+    enum StoreState {
+        UNINITIALIZED,
+        INITIALIZED,
+        LOADING,
+        LOADING_FINISHED
+    }
+
     void init();
 
     void recover();

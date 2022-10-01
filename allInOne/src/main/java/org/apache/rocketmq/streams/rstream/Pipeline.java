@@ -35,14 +35,14 @@ public class Pipeline {
         }
     };
 
-    public <K, V> RStream<K, V> addVirtualSource(GraphNode sourceGraphNode) {
+    public <T> RStream<T> addVirtualSource(GraphNode sourceGraphNode) {
         root.addChild(sourceGraphNode);
         virtualNodes.add(sourceGraphNode);
 
         return new RStreamImpl<>(this, sourceGraphNode);
     }
 
-    public <K, V> RStream<K, V> addVirtualNode(GraphNode currentNode, GraphNode parentNode) {
+    public <T> RStream<T> addVirtualNode(GraphNode currentNode, GraphNode parentNode) {
         parentNode.addChild(currentNode);
         currentNode.addParent(parentNode);
 
@@ -50,7 +50,7 @@ public class Pipeline {
         return new RStreamImpl<>(this, currentNode);
     }
 
-    public <K, V> GroupedStreamImpl<K, V> addVirtual(GraphNode currentNode, GraphNode parentNode) {
+    public <T> GroupedStreamImpl<T> addVirtual(GraphNode currentNode, GraphNode parentNode) {
         parentNode.addChild(currentNode);
         currentNode.addParent(parentNode);
 

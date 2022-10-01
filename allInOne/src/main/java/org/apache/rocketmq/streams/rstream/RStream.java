@@ -19,6 +19,7 @@ package org.apache.rocketmq.streams.rstream;
 
 import org.apache.rocketmq.streams.function.ForeachAction;
 import org.apache.rocketmq.streams.function.FilterAction;
+import org.apache.rocketmq.streams.function.KeySelector;
 import org.apache.rocketmq.streams.function.MapperAction;
 import org.apache.rocketmq.streams.function.ValueMapperAction;
 
@@ -28,7 +29,7 @@ public interface RStream<T> {
 
     RStream<T> filter(FilterAction<T> predictor);
 
-    <R> GroupedStream<R,V> groupBy(MapperAction<K, V, R> mapperAction);
+    <KEY> GroupedStream<T> groupBy(KeySelector<T, KEY> mapperAction);
 
     void print();
 

@@ -26,7 +26,7 @@ import org.apache.rocketmq.streams.topology.virtual.StatefulProcessorNode;
 
 import static org.apache.rocketmq.streams.OperatorNameMaker.COUNT_PREFIX;
 
-public class GroupedStreamImpl<K, V> implements GroupedStream<K, V> {
+public class GroupedStreamImpl<T> implements GroupedStream<T> {
     private final Pipeline pipeline;
     private final GraphNode parent;
     private boolean shuffleNode;
@@ -44,14 +44,10 @@ public class GroupedStreamImpl<K, V> implements GroupedStream<K, V> {
     }
 
     @Override
-    public GroupedStream<K, Long> count() {
+    public GroupedStream<T> count() {
         String name = OperatorNameMaker.makeName(COUNT_PREFIX);
 
-        RocksDBStore<K, Long> rocksDBStore = new RocksDBStore<>();
-        DefaultStore<K, Long> store = new DefaultStore<>(rocksDBStore);
-
-        AggregateActionSupplier<K, V, Long> supplier = new AggregateActionSupplier<>(name, parent.getName(), store,
-                                                                                        () -> 0L, (K key, V value, Long agg) -> agg + 1L);
+       new AggregateActionSupplier<>(name, parent.getName(), () -> 0L, (K key, T value, Long agg) -> agg + 1L);
 
         GraphNode graphNode;
         if (shuffleNode) {
@@ -65,7 +61,7 @@ public class GroupedStreamImpl<K, V> implements GroupedStream<K, V> {
     }
 
     @Override
-    public RStream<K, V> toRStream() {
+    public RStream<T> toRStream() {
         return new RStreamImpl<>(this.pipeline, parent);
     }
 }

@@ -16,6 +16,7 @@ package org.apache.rocketmq.streams.function.supplier;
  * limitations under the License.
  */
 
+import org.apache.rocketmq.streams.function.KeySelector;
 import org.apache.rocketmq.streams.function.MapperAction;
 import org.apache.rocketmq.streams.metadata.Data;
 import org.apache.rocketmq.streams.running.AbstractProcessor;
@@ -24,24 +25,24 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class MapperActionSupplier<K, V, NK> implements Supplier<Processor<K, V, NK, V>> {
-    private final MapperAction<K, V, NK> mapperAction;
+public class MapperActionSupplier<T, KEY> implements Supplier<Processor<T>> {
+    private final KeySelector<T, KEY> keySelector;
 
-    public MapperActionSupplier(MapperAction<K, V, NK> mapperAction) {
-        this.mapperAction = mapperAction;
+    public MapperActionSupplier(KeySelector<T, KEY> keySelector) {
+        this.keySelector = keySelector;
     }
 
     @Override
-    public Processor<K, V, NK, V> get() {
-        return new MapperProcessor(mapperAction);
+    public Processor<T> get() {
+        return new MapperProcessor(keySelector);
     }
 
-    private class MapperProcessor extends AbstractProcessor<K, V, NK, V> {
-        private final MapperAction<K, V, NK> mapperAction;
+    private class MapperProcessor extends AbstractProcessor<T> {
+        private KeySelector<T, KEY> keySelector;
         private StreamContext streamContext;
 
-        public MapperProcessor(MapperAction<K, V, NK> mapperAction) {
-            this.mapperAction = mapperAction;
+        public MapperProcessor(KeySelector<T, KEY> keySelector) {
+            this.keySelector = keySelector;
         }
 
         @Override
@@ -51,10 +52,12 @@ public class MapperActionSupplier<K, V, NK> implements Supplier<Processor<K, V, 
         }
 
         @Override
-        public void process(Data<K, V> data) {
-            NK convert = mapperAction.convert(data.getKey(), data.getValue());
-            Data<NK, V> newData = data.key(convert);
-            this.streamContext.forward(newData);
+        public void process(T data) {
+            KEY key = keySelector.select(data);
+
+//            NK convert = mapperAction.convert(data.getKey(), data.getValue());
+//            Data<NK, V> newData = data.key(convert);
+            this.streamContext.forward(data);
         }
     }
 }

@@ -17,10 +17,5 @@ package org.apache.rocketmq.streams.state;
  */
 
 public abstract class AbstractStore<K,V> implements StateStore<K,V> {
-    enum StoreState {
-        UNINITIALIZED,
-        INITIALIZED,
-        LOADING,
-        LOADING_FINISHED
-    }
+
 }

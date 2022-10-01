@@ -52,8 +52,8 @@ public class FilterActionSupplier<T> implements Supplier<Processor<T>> {
         }
 
         @Override
-        public void process(Data<T> data) {
-            boolean pass = filterAction.apply(data.getData());
+        public void process(T data) {
+            boolean pass = filterAction.apply(data);
             if (pass) {
                 this.context.forward(data);
             }

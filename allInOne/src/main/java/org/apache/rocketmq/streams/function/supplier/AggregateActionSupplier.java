@@ -25,43 +25,41 @@ import org.apache.rocketmq.streams.state.StateStore;
 
 import java.util.function.Supplier;
 
-public class AggregateActionSupplier<K, V, OV> implements Supplier<Processor<K, V, K, OV>> {
+public class AggregateActionSupplier<K,T,OUT> implements Supplier<Processor<T>> {
     private final String currentName;
     private final String parentName;
-    private StateStore<K, OV> stateStore;
-    private Supplier<OV> initAction;
-    private AggregateAction<K, V, OV> aggregateAction;
 
-    public AggregateActionSupplier(String currentName, String parentName,
-                                   StateStore<K, OV> stateStore, Supplier<OV> initAction,
-                                   AggregateAction<K, V, OV> aggregateAction) {
+    private Supplier<OUT> initAction;
+    private AggregateAction<K, T, OUT> aggregateAction;
+
+    public AggregateActionSupplier(String currentName, String parentName, Supplier<OUT> initAction,
+                                   AggregateAction<K, T, OUT> aggregateAction) {
         this.currentName = currentName;
         this.parentName = parentName;
-        this.stateStore = stateStore;
+
         this.initAction = initAction;
         this.aggregateAction = aggregateAction;
     }
 
     @Override
-    public Processor<K, V, K, OV> get() {
-        return new AggregateProcessor(currentName, parentName, stateStore, initAction, aggregateAction);
+    public Processor<T> get() {
+        return new AggregateProcessor(currentName, parentName, initAction, aggregateAction);
     }
 
-    private class AggregateProcessor extends AbstractProcessor<K, V, K, OV> {
+    private class AggregateProcessor extends AbstractProcessor<T> {
         private final String currentName;
         private final String parentName;
-        private final Supplier<OV> initAction;
-        private final StateStore<K, OV> stateStore;
-        private final AggregateAction<K, V, OV> aggregateAction;
+        private final Supplier<OUT> initAction;
+
+        private final AggregateAction<K, T, OUT> aggregateAction;
         private StreamContext context;
 
-        public AggregateProcessor(String currentName, String parentName,
-                                  StateStore<K, OV> stateStore, Supplier<OV> initAction,
-                                  AggregateAction<K, V, OV> aggregateAction) {
+        public AggregateProcessor(String currentName, String parentName, Supplier<OUT> initAction,
+                                  AggregateAction<K, T, OUT> aggregateAction) {
             this.currentName = currentName;
             this.parentName = parentName;
             this.initAction = initAction;
-            this.stateStore = stateStore;
+
             this.aggregateAction = aggregateAction;
         }
 
@@ -71,8 +69,10 @@ public class AggregateActionSupplier<K, V, OV> implements Supplier<Processor<K, 
             this.context.init(super.getChildren());
         }
 
+
+
         @Override
-        public void process(Data<K, V> data) {
+        public void process(T data) {
             K key = data.getKey();
             OV value = stateStore.get(key);
             if (value == null) {

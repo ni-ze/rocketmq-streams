@@ -16,9 +16,14 @@ package org.apache.rocketmq.streams.metadata;
  * limitations under the License.
  */
 
-public class Data<T> {
+public class Data<KEY, T> {
     private String sinkTopic;
+    private KEY key;
     private T data;
+
+    public Data(T data) {
+        this.data = data;
+    }
 
     public String getSinkTopic() {
         return sinkTopic;
@@ -34,6 +39,14 @@ public class Data<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public KEY getKey() {
+        return key;
+    }
+
+    public void setKey(KEY key) {
+        this.key = key;
     }
 
     //    private K key;
@@ -76,12 +89,5 @@ public class Data<T> {
 //        return new Data<>(key, value);
 //    }
 
-    @Override
-    public String toString() {
-        return "Data{" +
-                "sinkTopic='" + sinkTopic + '\'' +
-                ", key=" + key +
-                ", value=" + value +
-                '}';
-    }
+
 }

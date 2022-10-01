@@ -16,8 +16,6 @@ package org.apache.rocketmq.streams.running;
  * limitations under the License.
  */
 
-import org.apache.rocketmq.streams.metadata.Data;
-
 public interface Processor<T> extends AutoCloseable {
     void addChild(Processor<T> processor);
 
@@ -25,6 +23,6 @@ public interface Processor<T> extends AutoCloseable {
     void preProcess(StreamContext context);
 
 
-    void process(Data<T> data);
+    void process(T data);
 
 }

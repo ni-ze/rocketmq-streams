@@ -39,7 +39,7 @@ public class StreamContextImpl implements StreamContext {
     private final DefaultMQProducer producer;
     private final DefaultMQAdminExt mqAdmin;
     private final MessageExt messageExt;
-    private final List<Processor<?, ?, ?, ?>> childList = new ArrayList<>();
+    private final List<Processor<?>> childList = new ArrayList<>();
 
 
     public StreamContextImpl(DefaultMQProducer producer, DefaultMQAdminExt mqAdmin, MessageExt messageExt) {
@@ -49,7 +49,7 @@ public class StreamContextImpl implements StreamContext {
     }
 
     @Override
-    public <K, V, OK, OV> void init(List<Processor<K, V, OK, OV>> childrenProcessors) {
+    public <T> void init(List<Processor<T>> childrenProcessors) {
         this.childList.clear();
         if (childrenProcessors != null) {
             this.childList.addAll(childrenProcessors);
@@ -58,7 +58,7 @@ public class StreamContextImpl implements StreamContext {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <K, V> void forward(Data<K, V> data) {
+    public <T> void forward(T data) {
         if (childList.size() == 0 && !StringUtils.isEmpty(data.getSinkTopic())) {
             //todo 创建compact topic
             //根据不同key选择不同MessageQueue写入消息；
@@ -78,13 +78,13 @@ public class StreamContextImpl implements StreamContext {
         }
 
 
-        List<Processor<?, ?, ?, ?>> store = new ArrayList<>(childList);
+        List<Processor<?>> store = new ArrayList<>(childList);
 
-        for (Processor<?, ?, ?, ?> processor : childList) {
+        for (Processor<?> processor : childList) {
 
             try {
                 processor.preProcess(this);
-                ((Processor<K, V, ?, ?>) processor).process(data);
+                ((Processor<?>) processor).process(data);
             } finally {
                 this.childList.clear();
                 this.childList.addAll(store);

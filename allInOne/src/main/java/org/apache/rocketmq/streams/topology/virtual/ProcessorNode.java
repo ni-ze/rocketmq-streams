@@ -21,19 +21,19 @@ import org.apache.rocketmq.streams.topology.TopologyBuilder;
 
 import java.util.function.Supplier;
 
-public class ProcessorNode<K, V, OK, OV> extends AbstractGraphNode {
-    protected final Supplier<? extends Processor<K, V, OK, OV>> supplier;
+public class ProcessorNode<T> extends AbstractGraphNode {
+    protected final Supplier<? extends Processor<T>> supplier;
     protected final String parentName;
     protected boolean shuffle = false;
 
-    public ProcessorNode(String name, String parentName, Supplier<? extends Processor<K, V, OK, OV>> supplier) {
+    public ProcessorNode(String name, String parentName, Supplier<? extends Processor<T>> supplier) {
         super(name);
         this.supplier = supplier;
         this.parentName = parentName;
     }
 
     public ProcessorNode(String name, String parentName,
-                         boolean shuffle, Supplier<? extends Processor<K, V, OK, OV>> supplier) {
+                         boolean shuffle, Supplier<? extends Processor<T>> supplier) {
         super(name);
         this.supplier = supplier;
         this.parentName = parentName;
@@ -56,7 +56,7 @@ public class ProcessorNode<K, V, OK, OV> extends AbstractGraphNode {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ProcessorNode<?, ?, ?, ?> that = (ProcessorNode<?, ?, ?, ?>) o;
+        ProcessorNode<?> that = (ProcessorNode<?>) o;
         return this.name.equals(that.name);
     }
 

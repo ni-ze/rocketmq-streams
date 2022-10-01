@@ -17,12 +17,11 @@ package org.apache.rocketmq.streams;
  */
 
 import org.apache.rocketmq.streams.function.FilterAction;
+import org.apache.rocketmq.streams.function.KeySelector;
 import org.apache.rocketmq.streams.function.ValueMapperAction;
 import org.apache.rocketmq.streams.rstream.RStream;
 import org.apache.rocketmq.streams.rstream.StreamBuilder;
 import org.apache.rocketmq.streams.topology.TopologyBuilder;
-
-import java.util.Objects;
 import java.util.Properties;
 
 public class Demo {
@@ -44,7 +43,12 @@ public class Demo {
                         return false;
                     }
                 })
-                .groupBy((key, value) -> (value))
+                .groupBy(new KeySelector<Integer, String>() {
+                    @Override
+                    public String select(Integer data) {
+                        return null;
+                    }
+                })
                 .count()
                 .toRStream()
                 .print();
