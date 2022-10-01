@@ -23,7 +23,7 @@ import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
-import org.apache.rocketmq.streams.function.MapperAction;
+import org.apache.rocketmq.streams.function.KeySelectAction;
 import org.apache.rocketmq.streams.metadata.Data;
 import org.apache.rocketmq.streams.topology.TopologyBuilder;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
@@ -78,16 +78,16 @@ public class WorkerThread extends Thread {
         private final DefaultLitePullConsumer unionConsumer;
         private final DefaultMQProducer producer;
         private final DefaultMQAdminExt mqAdmin;
-        private final MapperAction<String, Integer, Processor<K, V, OK, OV>> mapperAction;
+        private final KeySelectAction<String, Integer, Processor<K, V, OK, OV>> keySelectAction;
         private volatile boolean running = false;
 
         public Engine(DefaultLitePullConsumer unionConsumer, DefaultMQProducer producer,
                       DefaultMQAdminExt mqAdmin,
-                      MapperAction<String, Integer, Processor<K, V, OK, OV>> mapperAction) {
+                      KeySelectAction<String, Integer, Processor<K, V, OK, OV>> keySelectAction) {
             this.unionConsumer = unionConsumer;
             this.producer = producer;
             this.mqAdmin = mqAdmin;
-            this.mapperAction = mapperAction;
+            this.keySelectAction = keySelectAction;
         }
 
         //todo 恢复状态
@@ -148,7 +148,7 @@ public class WorkerThread extends Thread {
                     set.add(queue);
 
 
-                    Processor<K, V, OK, OV> processor = this.mapperAction.convert(topic, queueId);
+                    Processor<K, V, OK, OV> processor = this.keySelectAction.select(topic, queueId);
 
                     StreamContextImpl context = new StreamContextImpl(producer, mqAdmin, messageExt);
                     processor.preProcess(context);

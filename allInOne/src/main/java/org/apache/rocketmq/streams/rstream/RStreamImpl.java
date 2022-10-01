@@ -19,7 +19,7 @@ package org.apache.rocketmq.streams.rstream;
 import org.apache.rocketmq.streams.OperatorNameMaker;
 import org.apache.rocketmq.streams.function.FilterAction;
 import org.apache.rocketmq.streams.function.ForeachAction;
-import org.apache.rocketmq.streams.function.MapperAction;
+import org.apache.rocketmq.streams.function.KeySelectAction;
 import org.apache.rocketmq.streams.function.ValueMapperAction;
 import org.apache.rocketmq.streams.function.supplier.FilterActionSupplier;
 import org.apache.rocketmq.streams.function.supplier.MapperActionSupplier;
@@ -65,10 +65,10 @@ public class RStreamImpl<K, V> implements RStream<K, V> {
     }
 
     @Override
-    public <NK> GroupedStream<NK, V> groupBy(MapperAction<K, V, NK> mapperAction) {
+    public <NK> GroupedStream<NK, V> keyBy(KeySelectAction<K, V, NK> keySelectAction) {
         String name = OperatorNameMaker.makeName(GROUPBY_PREFIX);
 
-        MapperActionSupplier<K, V, NK> mapperActionSupplier = new MapperActionSupplier<>(mapperAction);
+        MapperActionSupplier<K, V, NK> mapperActionSupplier = new MapperActionSupplier<>(keySelectAction);
 
         GraphNode processorNode = new ProcessorNode<>(name, parent.getName(), true, mapperActionSupplier);
 

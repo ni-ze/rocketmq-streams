@@ -17,7 +17,7 @@ package org.apache.rocketmq.streams.rstream;
  */
 
 public interface GroupedStream<K, V> {
-    //todo 返回的不再是GroupedStream
+
     GroupedStream<K,Long> count();
 
     RStream<K,V> toRStream();
