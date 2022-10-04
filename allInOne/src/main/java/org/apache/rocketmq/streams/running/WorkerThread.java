@@ -146,7 +146,7 @@ public class WorkerThread extends Thread {
 
                     Processor<K, V, OK, OV> processor = this.keySelectAction.select(topic, queueId);
 
-                    StreamContextImpl<K, V, OK, OV> context = new StreamContextImpl<>(serde, producer, mqAdmin, messageExt);
+                    StreamContextImpl<K, V, OK, OV> context = new StreamContextImpl(serde, producer, mqAdmin, messageExt);
                     processor.preProcess(context);
                     processor.process(data);
                 }

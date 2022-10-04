@@ -23,17 +23,16 @@ import org.apache.rocketmq.streams.rstream.StreamBuilder;
 import org.apache.rocketmq.streams.serialization.Wrapper;
 import org.apache.rocketmq.streams.topology.TopologyBuilder;
 
-import java.util.Objects;
 import java.util.Properties;
 
 public class Demo {
     public static void main(String[] args) {
         StreamBuilder builder = new StreamBuilder();
 
-        RStream<String> rStream = builder.source("sourceTopic");
+        RStream<String, String> rStream = builder.source("sourceTopic");
 
-        rStream.map((value) -> value)
-                .filter(Objects::nonNull)
+        rStream.map((key, value) -> value)
+                .filter((key, value) -> value != null)
                 .print();
 
         TopologyBuilder topologyBuilder = builder.build();

@@ -18,7 +18,7 @@ package org.apache.rocketmq.streams.running;
 
 import org.apache.rocketmq.streams.metadata.Context;
 
-public interface Processor<T> extends AutoCloseable {
+public interface Processor<K, V, OK, OV> extends AutoCloseable {
     void addChild(Processor<K, V, OK, OV> processor);
 
 

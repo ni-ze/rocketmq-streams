@@ -35,7 +35,7 @@ public class StreamBuilder {
         this.topologyBuilder = new TopologyBuilder();
     }
 
-    public <T> RStream<T> source(String topicName) {
+    public <K, V> RStream<K, V> source(String topicName) {
         String name = OperatorNameMaker.makeName(SOURCE_PREFIX);
 
         GraphNode sourceGraphNode = new SourceGraphNode<>(name, topicName);

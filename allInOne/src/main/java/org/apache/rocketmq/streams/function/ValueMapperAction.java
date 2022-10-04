@@ -16,6 +16,6 @@ package org.apache.rocketmq.streams.function;
  * limitations under the License.
  */
 
-public interface ValueMapperAction<T, O> {
-    O convert(final T value);
+public interface ValueMapperAction<K, V, OV> {
+    OV convert(final K key, final V value);
 }

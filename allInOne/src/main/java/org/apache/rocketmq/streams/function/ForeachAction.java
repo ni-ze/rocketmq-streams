@@ -17,6 +17,6 @@ package org.apache.rocketmq.streams.function;
  */
 
 @FunctionalInterface
-public interface ForeachAction<T> {
-    void apply(T value);
+public interface ForeachAction<K, V> {
+    void apply(K k, V v);
 }

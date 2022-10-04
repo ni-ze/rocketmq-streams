@@ -24,11 +24,11 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class ValueActionSupplier<T, O> implements Supplier<Processor<T>> {
-    private final ValueMapperAction<T, O> valueMapperAction;
+public class ValueActionSupplier<K, V, OV> implements Supplier<Processor<K, V, K, OV>> {
+    private final ValueMapperAction<K, V, OV> valueMapperAction;
 
 
-    public ValueActionSupplier(ValueMapperAction<T, O> valueMapperAction) {
+    public ValueActionSupplier(ValueMapperAction<K, V, OV> valueMapperAction) {
         this.valueMapperAction = valueMapperAction;
     }
 
@@ -39,7 +39,7 @@ public class ValueActionSupplier<T, O> implements Supplier<Processor<T>> {
 
 
     static class ValueMapperProcessor<K, V, OV> extends AbstractProcessor<K, V, K, OV> {
-        private final ValueMapperAction<K, V, OV> valueMapperAction;
+        private final ValueMapperAction<K,V, OV> valueMapperAction;
         private StreamContext<K, V, K, OV> context;
 
         public ValueMapperProcessor(ValueMapperAction<K, V, OV> valueMapperAction) {
