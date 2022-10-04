@@ -16,7 +16,7 @@ package org.apache.rocketmq.streams.function.supplier;
  * limitations under the License.
  */
 
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
 import org.apache.rocketmq.streams.running.AbstractProcessor;
 import org.apache.rocketmq.streams.running.Processor;
 import org.apache.rocketmq.streams.running.StreamContext;
@@ -36,17 +36,17 @@ public class SourceSupplier<K, V, OK, OV> implements Supplier<Processor<K, V, OK
     }
 
     private class SourceProcessor extends AbstractProcessor<K, V, OK, OV> {
-        private StreamContext context;
+        private StreamContext<K, V, OK, OV> context;
 
         @Override
-        public void preProcess(StreamContext context) {
+        public void preProcess(StreamContext<K, V, OK, OV> context) {
             this.context = context;
             this.context.init(super.getChildren());
         }
 
         @Override
-        public void process(Data<K, V> data) {
-            this.context.forward(data);
+        public void process(Context<K, V> context) {
+            this.context.forward(context);
         }
     }
 }

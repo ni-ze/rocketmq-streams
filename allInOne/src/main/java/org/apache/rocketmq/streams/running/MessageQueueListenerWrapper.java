@@ -67,6 +67,4 @@ public class MessageQueueListenerWrapper implements MessageQueueListener {
     private String buildKey(String topic, int queueId) {
         return String.format(pattern, topic, queueId);
     }
-
-
 }

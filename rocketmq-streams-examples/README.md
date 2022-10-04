@@ -7,7 +7,7 @@
 public class FileSourceExample {
     public static void main(String[] args) {
         DataStreamSource source = StreamBuilder.dataStream("namespace", "pipeline");
-        source.fromFile("data.txt", false)
+        source.fromFile("context.txt", false)
                 .map(message -> message)
                 .toPrint(1)
                 .start();
@@ -24,7 +24,7 @@ public class FileSourceExample {
 可以参考[Apache RocketMQ 搭建文档](https://rocketmq.apache.org/docs/quick-start/)
 
 #### 2.2 源数据
-[源数据](./../rocketmq-streams-examples/src/main/resources/data.txt)
+[源数据](./../rocketmq-streams-examples/src/main/resources/context.txt)
 ```xml
 {"InFlow":"1","ProjectName":"ProjectName-0","LogStore":"LogStore-0","OutFlow":"0"}
 {"InFlow":"2","ProjectName":"ProjectName-1","LogStore":"LogStore-1","OutFlow":"1"}
@@ -47,7 +47,7 @@ public class FileSourceExample {
 这个例子中，使用 rocketmq-streams 消费 rocketmq 中的数据，并按照 ProjectName 和 LogStore 两个字段联合分组统计，两个字段的值相同，分为一组。
 分别统计每组的InFlow和OutFlow两字段累计和。
 
-data.text数据运行的结果部分如下：
+context.text数据运行的结果部分如下：
 
 ```xml
 "InFlow":22,"total":4,"ProjectName":"ProjectName-0","LogStore":"LogStore-0","OutFlow":18
@@ -162,7 +162,7 @@ data.text数据运行的结果部分如下：
 
 ### 4、Rocketmq-streams 多客户端消费
 #### 4.1、数据说明
-源数据由[data.txt](./../rocketmq-streams-examples/src/main/resources/data.txt)组成，反复发送100遍，总共生产1000条数据。
+源数据由[context.txt](./../rocketmq-streams-examples/src/main/resources/context.txt)组成，反复发送100遍，总共生产1000条数据。
 #### 4.2、代码实例
 [代码示例](./../rocketmq-streams-examples/src/main/java/org/apache/rocketmq/streams/examples/mutilconsumer/MutilStreamsClientTest.java)
 

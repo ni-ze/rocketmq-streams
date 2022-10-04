@@ -16,7 +16,7 @@ package org.apache.rocketmq.streams.function.supplier;
  * limitations under the License.
  */
 
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
 import org.apache.rocketmq.streams.running.AbstractProcessor;
 import org.apache.rocketmq.streams.running.Processor;
 import org.apache.rocketmq.streams.running.StreamContext;
@@ -44,8 +44,8 @@ public class PrintActionSupplier<K, V,OK,OV> implements Supplier<Processor<K, V,
         }
 
         @Override
-        public void process(Data<K, V> data) {
-            System.out.println("print sink: " + data);
+        public void process(Context<K, V> context) {
+            System.out.println("print sink: " + context);
         }
     }
 

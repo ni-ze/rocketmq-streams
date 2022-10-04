@@ -23,7 +23,8 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.remoting.exception.RemotingException;
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
+import org.apache.rocketmq.streams.serialization.Serde;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 
 import java.nio.charset.StandardCharsets;
@@ -35,37 +36,38 @@ import java.util.List;
  * 2、可以获得下一个执行节点
  * 3、可获得动态的运行时信息，例如正在处理的数据来自那个topic，MQ，偏移量多少；
  */
-public class StreamContextImpl implements StreamContext {
+public class StreamContextImpl<K, V, OK, OV> implements StreamContext<K, V, OK, OV> {
+    private final Serde<V> serde;
     private final DefaultMQProducer producer;
     private final DefaultMQAdminExt mqAdmin;
     private final MessageExt messageExt;
-    private final List<Processor<?, ?, ?, ?>> childList = new ArrayList<>();
+    private final List<Processor<K, V, OK, OV>> childList = new ArrayList<>();
 
 
-    public StreamContextImpl(DefaultMQProducer producer, DefaultMQAdminExt mqAdmin, MessageExt messageExt) {
+    public StreamContextImpl(Serde<V> serde, DefaultMQProducer producer, DefaultMQAdminExt mqAdmin, MessageExt messageExt) {
+        this.serde = serde;
         this.producer = producer;
         this.mqAdmin = mqAdmin;
         this.messageExt = messageExt;
     }
 
     @Override
-    public <K, V, OK, OV> void init(List<Processor<K, V, OK, OV>> childrenProcessors) {
+    public void init(List<Processor<K, V, OK, OV>> childrenProcessors) {
         this.childList.clear();
         if (childrenProcessors != null) {
             this.childList.addAll(childrenProcessors);
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <K, V> void forward(Data<K, V> data) {
-        if (childList.size() == 0 && !StringUtils.isEmpty(data.getSinkTopic())) {
+    public void forward(Context<K, V> context) {
+        if (childList.size() == 0 && !StringUtils.isEmpty(context.getSinkTopic())) {
             //todo 创建compact topic
             //根据不同key选择不同MessageQueue写入消息；
 
-            String key = String.valueOf(data.getKey());
-            String value = data.getValue().toString();
-            Message message = new Message(data.getSinkTopic(), "", key, value.getBytes(StandardCharsets.UTF_8));
+            String key = String.valueOf(context.getKey());
+            String value = context.getValue().toString();
+            Message message = new Message(context.getSinkTopic(), "", key, value.getBytes(StandardCharsets.UTF_8));
 
             try {
                 producer.send(message);
@@ -78,20 +80,21 @@ public class StreamContextImpl implements StreamContext {
         }
 
 
-        List<Processor<?, ?, ?, ?>> store = new ArrayList<>(childList);
+        List<Processor<K, V, OK, OV>> store = new ArrayList<>(childList);
 
-        for (Processor<?, ?, ?, ?> processor : childList) {
+        for (Processor<K, V, OK, OV> processor : childList) {
 
             try {
                 processor.preProcess(this);
-                ((Processor<K, V, ?, ?>) processor).process(data);
+                processor.process(context);
             } finally {
                 this.childList.clear();
                 this.childList.addAll(store);
             }
         }
-
     }
+
+
 
 
 }

@@ -43,7 +43,7 @@ public class TopologyBuilder {
 
     private final HashMap<String, StatefulProcessorFactory<?, ?, ?, ?>> name2StateStore = new HashMap<>();
 
-    public <K, V, OK, OV> void addRealSource(String name, String topicName, Supplier<? extends Processor<K, V, OK, OV>> supplier) {
+    public <K, V, OK, OV> void addRealSource(String name, String topicName, Supplier<Processor<K, V, OK, OV>> supplier) {
         SourceFactory<K, V, OK, OV> sourceFactory = new SourceFactory<>(name, topicName, supplier);
 
         realNodeFactory.put(name, sourceFactory);

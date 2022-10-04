@@ -16,12 +16,13 @@ package org.apache.rocketmq.streams.metadata;
  * limitations under the License.
  */
 
-public class Data<K, V> {
+
+public class Context<K, V> {
     private String sinkTopic;
     private K key;
     private V value;
 
-    public Data(K key, V value) {
+    public Context(K key, V value) {
         this.key = key;
         this.value = value;
     }
@@ -50,12 +51,12 @@ public class Data<K, V> {
         this.sinkTopic = sinkTopic;
     }
 
-    public <NK> Data<NK,V> key(NK key) {
-        return new Data<>(key, value);
+    public <NK> Context<NK,V> key(NK key) {
+        return new Context<>(key, value);
     }
 
-    public <NV> Data<K,NV> value(NV value) {
-        return new Data<>(key, value);
+    public <NV> Context<K,NV> value(NV value) {
+        return new Context<>(key, value);
     }
 
     @Override

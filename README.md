@@ -14,7 +14,7 @@
 ## Features
 
 * Lightweight deployment: RocketMQ Streams can be deployed separately or in cluster mode.
-* Various types of data input and output: source supports RocketMQ while sink supports databases and RocketMQ, etc.
+* Various types of context input and output: source supports RocketMQ while sink supports databases and RocketMQ, etc.
 
 ## DataStream Example
 
@@ -23,7 +23,7 @@ import org.apache.rocketmq.streams.client.transform.DataStream;
 
 DataStreamSource source=StreamBuilder.dataStream("namespace","pipeline");
     source
-    .fromFile("～/admin/data/text.txt",false)
+    .fromFile("～/admin/context/text.txt",false)
     .map(message->message)
     .toPrint(1)
     .start();
@@ -55,25 +55,25 @@ StreamBuilder is used to build the source of stream tasks. It contains two metho
 
 ### Source
 
-DataStreamSource is a source class of segmented programming, used to interface with various data sources and obtain data from major message queues.
+DataStreamSource is a source class of segmented programming, used to interface with various context sources and obtain context from major message queues.
 
-+ ```fromFile```: reads data from the file. This method contains two parameters:
++ ```fromFile```: reads context from the file. This method contains two parameters:
     + ```filePath```: specifies which file path to read. Required.
-    + ```isJsonData```: specifies whether data is in JSON format. Optional. Default value: ```true```.
+    + ```isJsonData```: specifies whether context is in JSON format. Optional. Default value: ```true```.
     + ```tags```: the tags for filtering messages used by the RocketMQ consumer. Optional.
 
 
-+ ```fromRocketmq```: obtains data from RocketMQ, including four parameters:
++ ```fromRocketmq```: obtains context from RocketMQ, including four parameters:
     + ```topic```:  the topic name of RocketMQ. Required.
     + ```groupName```: the name of the consumer group. Required.
-    + ```isJson```: specifies whether data is in JSON format. Optional.
+    + ```isJson```: specifies whether context is in JSON format. Optional.
     + ```tags```: the tags for filtering messages used by the RocketMQ consumer. Optional.
 
-+ ```from```: custom data source. You can specify your own data source by implementing ISource interface.
++ ```from```: custom context source. You can specify your own context source by implementing ISource interface.
 
 ### transform
 
-transform allows the input source data to be modified during the stream calculation process for the next step; DataStream API includes ```DataStream```, ```JoinStream```, ```SplitStream```, ```WindowStream```, and many other transform classes.
+transform allows the input source context to be modified during the stream calculation process for the next step; DataStream API includes ```DataStream```, ```JoinStream```, ```SplitStream```, ```WindowStream```, and many other transform classes.
 
 #### DataStream
 
@@ -100,11 +100,11 @@ DataStream implements a series of common stream calculation operators as follows
     + ```reduce```: performs custom summary calculations in the window.
 + ```join```: associates the two streams or one stream and one physical table according to the conditions and merges them into a large stream for related calculations.
     + ```dimJoin```  associate a stream with a physical table which can be a file or a db table, and all matching records are retained
-    + ```dimLeftJoin```  After a flow is associated with a physical table, all data of the flow is reserved and fields that do not match the physical table are left blank
+    + ```dimLeftJoin```  After a flow is associated with a physical table, all context of the flow is reserved and fields that do not match the physical table are left blank
     + ```join```
     + ```leftJoin```
 + ```union```: merges the two streams.
-+ ```split```: splits a data stream into different data streams according to tags for downstream analysis and calculation.
++ ```split```: splits a context stream into different context streams according to tags for downstream analysis and calculation.
 + ```with```: specifies related strategies during the calculation, including Checkpoint and state storage strategies, etc.
 
 # Strategy

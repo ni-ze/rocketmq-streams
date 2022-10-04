@@ -16,7 +16,7 @@ package org.apache.rocketmq.streams.function.supplier;
  * limitations under the License.
  */
 
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
 import org.apache.rocketmq.streams.function.ValueMapperAction;
 import org.apache.rocketmq.streams.running.AbstractProcessor;
 import org.apache.rocketmq.streams.running.Processor;
@@ -24,11 +24,11 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class ValueActionSupplier<K, V, OV> implements Supplier<Processor<K, V, K, OV>> {
-    private final ValueMapperAction<V, OV> valueMapperAction;
+public class ValueActionSupplier<T, O> implements Supplier<Processor<T>> {
+    private final ValueMapperAction<T, O> valueMapperAction;
 
 
-    public ValueActionSupplier(ValueMapperAction<V, OV> valueMapperAction) {
+    public ValueActionSupplier(ValueMapperAction<T, O> valueMapperAction) {
         this.valueMapperAction = valueMapperAction;
     }
 
@@ -38,24 +38,24 @@ public class ValueActionSupplier<K, V, OV> implements Supplier<Processor<K, V, K
     }
 
 
-    static class ValueMapperProcessor<K, V, OK, OV> extends AbstractProcessor<K, V, OK, OV> {
-        private final ValueMapperAction<V, OV> valueMapperAction;
-        private StreamContext context;
+    static class ValueMapperProcessor<K, V, OV> extends AbstractProcessor<K, V, K, OV> {
+        private final ValueMapperAction<K, V, OV> valueMapperAction;
+        private StreamContext<K, V, K, OV> context;
 
-        public ValueMapperProcessor(ValueMapperAction<V, OV> valueMapperAction) {
+        public ValueMapperProcessor(ValueMapperAction<K, V, OV> valueMapperAction) {
             this.valueMapperAction = valueMapperAction;
         }
 
         @Override
-        public void preProcess(StreamContext context) {
+        public void preProcess(StreamContext<K, V, K, OV> context) {
             this.context = context;
             this.context.init(super.getChildren());
         }
 
         @Override
-        public void process(Data<K, V> data) {
-            OV newValue = valueMapperAction.convert(data.getValue());
-            Data<K, OV> result = new Data<>(data.getKey(), newValue);
+        public void process(Context<K, V> context) {
+            OV value = valueMapperAction.convert(context.getKey(), context.getValue());
+            Context<K, V> result = super.convert(context.value(value));
             this.context.forward(result);
         }
     }

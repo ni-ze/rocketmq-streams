@@ -16,15 +16,19 @@ package org.apache.rocketmq.streams.running;
  * limitations under the License.
  */
 
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
 
-public interface Processor<K, V, OK, OV> extends AutoCloseable {
+public interface Processor<T> extends AutoCloseable {
     void addChild(Processor<K, V, OK, OV> processor);
 
 
-    void preProcess(StreamContext context);
+    void preProcess(StreamContext<K, V, OK, OV> context);
 
 
-    void process(Data<K, V> data);
+    void process(Context<K, V> data);
 
+    @SuppressWarnings("unchecked")
+    default Context<K, V> convert(Context<?, ?> data){
+        return (Context<K, V>) new Context<>(data.getKey(), data.getValue());
+    }
 }

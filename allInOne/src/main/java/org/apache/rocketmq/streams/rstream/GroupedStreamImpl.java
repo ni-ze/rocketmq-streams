@@ -50,8 +50,7 @@ public class GroupedStreamImpl<K, V> implements GroupedStream<K, V> {
         RocksDBStore<K, Long> rocksDBStore = new RocksDBStore<>();
         DefaultStore<K, Long> store = new DefaultStore<>(rocksDBStore);
 
-        AggregateActionSupplier<K, V, Long> supplier = new AggregateActionSupplier<>(name, parent.getName(), store,
-                                                                                        () -> 0L, (K key, V value, Long agg) -> agg + 1L);
+        AggregateActionSupplier<K, V, Long> supplier = new AggregateActionSupplier<>(name, parent.getName(), store, () -> 0L, (K key, V value, Long agg) -> agg + 1L);
 
         GraphNode graphNode;
         if (shuffleNode) {

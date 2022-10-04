@@ -42,7 +42,7 @@ public class RocketMQStream {
         try {
             int threadNum = StreamConfig.STREAMS_PARALLEL_THREAD_NUM;
             for (int i = 0; i < threadNum; i++) {
-                WorkerThread thread = new WorkerThread(topologyBuilder, "127.0.0.1:9876");
+                WorkerThread thread = new WorkerThread(topologyBuilder, this.properties);
                 thread.start();
             }
         } catch (Throwable t) {

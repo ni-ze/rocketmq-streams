@@ -29,7 +29,7 @@ import org.apache.rocketmq.streams.client.transform.DataStream;
 DataStreamSource source=StreamBuilder.dataStream("namespace","pipeline");
 
     source
-    .fromFile("～/admin/data/text.txt",false)
+    .fromFile("～/admin/context/text.txt",false)
     .map(message->message)
     .toPrint(1)
     .start();

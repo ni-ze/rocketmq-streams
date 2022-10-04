@@ -16,12 +16,12 @@ package org.apache.rocketmq.streams.running;
  * limitations under the License.
  */
 
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
 
 import java.util.List;
 
-public interface StreamContext {
-    <K, V, OK, OV> void init(List<Processor<K, V, OK, OV>> childrenProcessors);
+public interface StreamContext<K, V, OK, OV> {
+    void init(List<Processor<K, V, OK, OV>> childrenProcessors);
 
-    <K, V> void forward(Data<K, V> data);
+    void forward(Context<K, V> context);
 }

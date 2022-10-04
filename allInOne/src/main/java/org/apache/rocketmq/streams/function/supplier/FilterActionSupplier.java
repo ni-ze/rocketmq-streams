@@ -16,7 +16,7 @@ package org.apache.rocketmq.streams.function.supplier;
  * limitations under the License.
  */
 
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
 import org.apache.rocketmq.streams.function.FilterAction;
 import org.apache.rocketmq.streams.running.AbstractProcessor;
 import org.apache.rocketmq.streams.running.Processor;
@@ -38,7 +38,7 @@ public class FilterActionSupplier<K, V> implements Supplier<Processor<K, V, K, V
 
     private class FilterProcessor extends AbstractProcessor<K, V, K, V> {
         private final FilterAction<K, V> filterAction;
-        private StreamContext  context;
+        private StreamContext<K, V, K, V>  context;
 
         public FilterProcessor(FilterAction<K, V> filterAction) {
             this.filterAction = filterAction;
@@ -46,16 +46,16 @@ public class FilterActionSupplier<K, V> implements Supplier<Processor<K, V, K, V
 
 
         @Override
-        public void preProcess(StreamContext  context) {
+        public void preProcess(StreamContext<K, V, K, V>  context) {
             this.context = context;
             this.context.init(super.getChildren());
         }
 
         @Override
-        public void process(Data<K, V> data) {
-            boolean pass = filterAction.apply(data.getKey(), data.getValue());
+        public  void process(Context<K, V> context) {
+            boolean pass = filterAction.apply(context.getKey(), context.getValue());
             if (pass) {
-                this.context.forward(data);
+                this.context.forward(context);
             }
         }
     }

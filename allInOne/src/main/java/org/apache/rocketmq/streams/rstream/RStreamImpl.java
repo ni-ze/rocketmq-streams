@@ -22,7 +22,7 @@ import org.apache.rocketmq.streams.function.ForeachAction;
 import org.apache.rocketmq.streams.function.KeySelectAction;
 import org.apache.rocketmq.streams.function.ValueMapperAction;
 import org.apache.rocketmq.streams.function.supplier.FilterActionSupplier;
-import org.apache.rocketmq.streams.function.supplier.MapperActionSupplier;
+import org.apache.rocketmq.streams.function.supplier.KeySelectActionSupplier;
 import org.apache.rocketmq.streams.function.supplier.PrintActionSupplier;
 import org.apache.rocketmq.streams.function.supplier.SinkSupplier;
 import org.apache.rocketmq.streams.function.supplier.ValueActionSupplier;
@@ -35,7 +35,7 @@ import static org.apache.rocketmq.streams.OperatorNameMaker.GROUPBY_PREFIX;
 import static org.apache.rocketmq.streams.OperatorNameMaker.MAP_PREFIX;
 import static org.apache.rocketmq.streams.OperatorNameMaker.SINK_PREFIX;
 
-public class RStreamImpl<K, V> implements RStream<K, V> {
+public class RStreamImpl<T> implements RStream<T> {
     private final Pipeline pipeline;
     private final GraphNode parent;
 
@@ -45,7 +45,7 @@ public class RStreamImpl<K, V> implements RStream<K, V> {
     }
 
     @Override
-    public <OV> RStream<K, OV> map(ValueMapperAction<V, OV> mapperAction) {
+    public <O> RStream<O> map(ValueMapperAction<T, O> mapperAction) {
         String name = OperatorNameMaker.makeName(MAP_PREFIX);
 
         ValueActionSupplier<K, V, OV> supplier = new ValueActionSupplier<>(mapperAction);
@@ -68,9 +68,9 @@ public class RStreamImpl<K, V> implements RStream<K, V> {
     public <NK> GroupedStream<NK, V> keyBy(KeySelectAction<K, V, NK> keySelectAction) {
         String name = OperatorNameMaker.makeName(GROUPBY_PREFIX);
 
-        MapperActionSupplier<K, V, NK> mapperActionSupplier = new MapperActionSupplier<>(keySelectAction);
+        KeySelectActionSupplier<K, V, NK> keySelectActionSupplier = new KeySelectActionSupplier<>(keySelectAction);
 
-        GraphNode processorNode = new ProcessorNode<>(name, parent.getName(), true, mapperActionSupplier);
+        GraphNode processorNode = new ProcessorNode<>(name, parent.getName(), true, keySelectActionSupplier);
 
         return pipeline.addVirtual(processorNode, parent);
     }
@@ -94,7 +94,7 @@ public class RStreamImpl<K, V> implements RStream<K, V> {
     public void sink(String topicName) {
         String name = OperatorNameMaker.makeName(SINK_PREFIX);
 
-        SinkSupplier<K, V, ?, ?> sinkSupplier = new SinkSupplier<>(topicName);
+        SinkSupplier<K, V> sinkSupplier = new SinkSupplier<>(topicName);
         GraphNode sinkGraphNode = new SinkGraphNode<>(name, parent.getName(), topicName, sinkSupplier);
 
         pipeline.addVirtualSink(sinkGraphNode, parent);

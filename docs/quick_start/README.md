@@ -22,7 +22,7 @@ public class RocketmqExample {
         DataStreamSource dataStream = StreamBuilder.dataStream("test_namespace", "graph_pipeline");
 
         dataStream
-            .fromFile("data.csv", false)   //构建实时任务的数据源
+            .fromFile("context.csv", false)   //构建实时任务的数据源
             .map(message -> message.split(","))   //构建实时任务处理的逻辑过程
             .toPrint(1)   //构建实时任务的输出
             .start();    //启动实时任务

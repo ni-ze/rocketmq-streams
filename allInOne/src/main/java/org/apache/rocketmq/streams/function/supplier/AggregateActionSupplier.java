@@ -17,7 +17,7 @@ package org.apache.rocketmq.streams.function.supplier;
  */
 
 import org.apache.rocketmq.streams.function.AggregateAction;
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
 import org.apache.rocketmq.streams.running.AbstractProcessor;
 import org.apache.rocketmq.streams.running.Processor;
 import org.apache.rocketmq.streams.running.StreamContext;
@@ -53,7 +53,7 @@ public class AggregateActionSupplier<K, V, OV> implements Supplier<Processor<K, 
         private final Supplier<OV> initAction;
         private final StateStore<K, OV> stateStore;
         private final AggregateAction<K, V, OV> aggregateAction;
-        private StreamContext context;
+        private StreamContext<K, V, K, OV> context;
 
         public AggregateProcessor(String currentName, String parentName,
                                   StateStore<K, OV> stateStore, Supplier<OV> initAction,
@@ -66,25 +66,25 @@ public class AggregateActionSupplier<K, V, OV> implements Supplier<Processor<K, 
         }
 
         @Override
-        public void preProcess(StreamContext context) {
+        public void preProcess(StreamContext<K, V, K, OV> context) {
             this.context = context;
             this.context.init(super.getChildren());
         }
 
         @Override
-        public void process(Data<K, V> data) {
-            K key = data.getKey();
+        public void process(Context<K, V> context) {
+            K key = context.getKey();
             OV value = stateStore.get(key);
             if (value == null) {
                 value = initAction.get();
             }
-            OV out = aggregateAction.calculate(key, data.getValue(), value);
+            OV out = aggregateAction.calculate(key, context.getValue(), value);
 
             stateStore.put(key, out);
 
-            Data<K, OV> result = data.value(out);
+            Context<K, V> result = super.convert(context.value(out));
 
-            context.forward(result);
+            this.context.forward(result);
         }
     }
 }

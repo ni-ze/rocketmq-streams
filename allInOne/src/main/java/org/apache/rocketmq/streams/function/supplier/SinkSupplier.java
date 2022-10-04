@@ -16,14 +16,14 @@ package org.apache.rocketmq.streams.function.supplier;
  * limitations under the License.
  */
 
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
 import org.apache.rocketmq.streams.running.AbstractProcessor;
 import org.apache.rocketmq.streams.running.Processor;
 import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class SinkSupplier<K, V, OK, OV> implements Supplier<Processor<K, V, OK, OV>> {
+public class SinkSupplier<K, V> implements Supplier<Processor<K, V, K, V>> {
     private String topicName;
 
     public SinkSupplier(String topicName) {
@@ -31,24 +31,24 @@ public class SinkSupplier<K, V, OK, OV> implements Supplier<Processor<K, V, OK, 
     }
 
     @Override
-    public Processor<K, V, OK, OV> get() {
+    public Processor<K, V, K, V> get() {
         return new SinkProcessor();
     }
 
-    private class SinkProcessor extends AbstractProcessor<K, V, OK, OV> {
-        private StreamContext context;
+    private class SinkProcessor extends AbstractProcessor<K, V, K, V> {
+        private StreamContext<K, V, K, V> context;
 
         @Override
-        public void preProcess(StreamContext context) {
+        public void preProcess(StreamContext<K, V, K, V> context) {
             this.context = context;
             this.context.init(null);
         }
 
         @Override
-        public void process(Data<K, V> data) {
-            if (data.getValue() != null) {
-                data.setSinkTopic(topicName);
-                this.context.forward(data);
+        public void process(Context<K, V> context) {
+            if (context.getValue() != null) {
+                context.setSinkTopic(topicName);
+                this.context.forward(context);
             }
 
         }

@@ -16,34 +16,37 @@ package org.apache.rocketmq.streams.running;
  * limitations under the License.
  */
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.consumer.DefaultLitePullConsumer;
 import org.apache.rocketmq.client.consumer.MessageQueueListener;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.streams.common.Constant;
 import org.apache.rocketmq.streams.function.KeySelectAction;
-import org.apache.rocketmq.streams.metadata.Data;
+import org.apache.rocketmq.streams.metadata.Context;
+import org.apache.rocketmq.streams.serialization.Serde;
 import org.apache.rocketmq.streams.topology.TopologyBuilder;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
-import static org.apache.rocketmq.common.message.MessageConst.PROPERTY_KEYS;
 import static org.apache.rocketmq.streams.metadata.StreamConfig.ROCKETMQ_STREAMS_CONSUMER_GROUP;
 
 public class WorkerThread extends Thread {
     private final TopologyBuilder topologyBuilder;
     private final Engine<?, ?, ?, ?> engine;
+    private final Properties properties;
 
-    public WorkerThread(TopologyBuilder topologyBuilder, String nameSrvAddr) throws MQClientException {
+    public WorkerThread(TopologyBuilder topologyBuilder, Properties properties) throws MQClientException {
         this.topologyBuilder = topologyBuilder;
+        this.properties = properties;
 
-        RocketMQClient rocketMQClient = new RocketMQClient(nameSrvAddr);
+        RocketMQClient rocketMQClient = new RocketMQClient(properties.getProperty(MixAll.NAMESRV_ADDR_PROPERTY));
 
         Set<String> sourceTopic = topologyBuilder.getSourceTopic();
         DefaultLitePullConsumer unionConsumer = rocketMQClient.pullConsumer(ROCKETMQ_STREAMS_CONSUMER_GROUP, sourceTopic);
@@ -74,7 +77,7 @@ public class WorkerThread extends Thread {
 
 
     @SuppressWarnings("unchecked")
-    static class Engine<K, V, OK, OV> {
+    class Engine<K, V, OK, OV> {
         private final DefaultLitePullConsumer unionConsumer;
         private final DefaultMQProducer producer;
         private final DefaultMQAdminExt mqAdmin;
@@ -130,16 +133,9 @@ public class WorkerThread extends Thread {
                         continue;
                     }
 
-                    //todo 将 body转化为V类型的对象，现在这里只支持String
-                    V value = (V)Integer.valueOf(new String(body, StandardCharsets.UTF_8));
-
-                    K key = null;
-                    String temp = messageExt.getProperty(PROPERTY_KEYS);
-                    if (!StringUtils.isEmpty(temp)) {
-                        key = (K) temp;
-                    }
-
-                    Data<K, V> data = new Data<>(key, value);
+                    Serde<V> serde = getSerde();
+                    V value = makeValue(serde, messageExt);
+                    Context<K, V> data = new Context<>(null, value);
 
                     String topic = messageExt.getTopic();
                     int queueId = messageExt.getQueueId();
@@ -150,7 +146,7 @@ public class WorkerThread extends Thread {
 
                     Processor<K, V, OK, OV> processor = this.keySelectAction.select(topic, queueId);
 
-                    StreamContextImpl context = new StreamContextImpl(producer, mqAdmin, messageExt);
+                    StreamContextImpl<K, V, OK, OV> context = new StreamContextImpl<>(serde, producer, mqAdmin, messageExt);
                     processor.preProcess(context);
                     processor.process(data);
                 }
@@ -158,6 +154,22 @@ public class WorkerThread extends Thread {
                 //todo 每次都提交位点消耗太大，后面改成拉取消息放入buffer的形式。
                 this.unionConsumer.commit(set, true);
             }
+        }
+
+        private Serde<V> getSerde() throws Throwable {
+            String serDe = WorkerThread.this.properties.getProperty(Constant.DEFAULT_SERDE_CLASS_CONFIG);
+            Class<?> serDeClazz = Class.forName(serDe);
+            if (!Serde.class.isAssignableFrom(serDeClazz)) {
+                throw new IllegalArgumentException("serde class must implements interface org.apache.rocketmq.streams.serialization.Serde");
+            }
+
+            return (Serde<V>) serDeClazz.getDeclaredConstructor().newInstance();
+        }
+
+
+        private V makeValue(Serde<V> serde, MessageExt messageExt) throws Throwable {
+            byte[] body = messageExt.getBody();
+            return serde.deserializer().deserialize(body);
         }
 
         public void stop() {
