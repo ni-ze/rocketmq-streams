@@ -16,12 +16,12 @@ package org.apache.rocketmq.streams.state;
  * limitations under the License.
  */
 
-public class DefaultStore<K,V> extends AbstractStore<K,V> {
+public class DefaultStore<K, V> extends AbstractStore<K, V> {
     protected StoreState state = StoreState.UNINITIALIZED;
     protected final Object lock = new Object();
-    private RocksDBStore<K,V> rocksDBStore;
+    private RocksDBStore<K, V> rocksDBStore;
 
-    public DefaultStore(RocksDBStore<K,V> rocksDBStore) {
+    public DefaultStore(RocksDBStore<K, V> rocksDBStore) {
         this.rocksDBStore = rocksDBStore;
     }
 
@@ -43,13 +43,13 @@ public class DefaultStore<K,V> extends AbstractStore<K,V> {
     }
 
     @Override
-    public V get(K v) {
-        return null;
+    public V get(K key) {
+        return this.rocksDBStore.get(key);
     }
 
     @Override
     public void put(K k, V v) {
-
+        this.rocksDBStore.put(k, v);
     }
 
     @Override

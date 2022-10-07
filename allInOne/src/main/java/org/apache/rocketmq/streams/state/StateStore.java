@@ -21,9 +21,9 @@ public interface StateStore<K, V> extends AutoCloseable {
 
     void recover();
 
-    V get(K v);
+    V get(K key);
 
-    void put(K k, V v);
+    void put(K key, V value);
 
     void flush();
 }

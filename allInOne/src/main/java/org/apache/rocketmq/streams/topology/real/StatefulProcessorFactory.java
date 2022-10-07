@@ -21,10 +21,10 @@ import org.apache.rocketmq.streams.state.StateStore;
 
 import java.util.function.Supplier;
 
-public class StatefulProcessorFactory<K, V, OK, OV> extends ProcessorFactory<K, V, OK, OV> {
+public class StatefulProcessorFactory<K, V> extends ProcessorFactory<V> {
     private StateStore<K, V> stateStore;
 
-    public StatefulProcessorFactory(String name, Supplier<? extends Processor<K, V, OK, OV>> supplier) {
+    public StatefulProcessorFactory(String name, Supplier<Processor<V>> supplier) {
         super(name, supplier);
     }
 
@@ -38,7 +38,7 @@ public class StatefulProcessorFactory<K, V, OK, OV> extends ProcessorFactory<K, 
 
     //对于有状态节点，这里提供的processor也是需要包含状态的
     @Override
-    public Processor<K, V, OK, OV> build() {
+    public Processor<V> build() {
         return super.build();
     }
 }

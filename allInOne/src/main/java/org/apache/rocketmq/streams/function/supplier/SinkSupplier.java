@@ -23,7 +23,7 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class SinkSupplier<K, V> implements Supplier<Processor<K, V, K, V>> {
+public class SinkSupplier<T> implements Supplier<Processor<T>> {
     private String topicName;
 
     public SinkSupplier(String topicName) {
@@ -31,29 +31,27 @@ public class SinkSupplier<K, V> implements Supplier<Processor<K, V, K, V>> {
     }
 
     @Override
-    public Processor<K, V, K, V> get() {
+    public Processor<T> get() {
         return new SinkProcessor();
     }
 
-    private class SinkProcessor extends AbstractProcessor<K, V, K, V> {
-        private StreamContext<K, V, K, V> context;
+    private class SinkProcessor extends AbstractProcessor<T> {
+        private StreamContext<T> context;
 
         @Override
-        public void preProcess(StreamContext<K, V, K, V> context) {
+        public void preProcess(StreamContext<T> context) {
             this.context = context;
             this.context.init(null);
         }
 
         @Override
-        public void process(Context<K, V> context) {
-            if (context.getValue() != null) {
-                context.setSinkTopic(topicName);
-                this.context.forward(context);
+        public void process(T data) {
+            if (data != null) {
+                Context<Object, T> result = new Context<>(this.context.getKey(), data);
+                result.setSinkTopic(topicName);
+                this.context.forward(result);
             }
 
         }
-
-
-
     }
 }

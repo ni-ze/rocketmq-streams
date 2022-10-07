@@ -33,30 +33,41 @@ public class ValueActionSupplier<T, O> implements Supplier<Processor<T>> {
     }
 
     @Override
-    public Processor<K, V, K, OV> get() {
+    public Processor<T> get() {
         return new ValueMapperProcessor<>(this.valueMapperAction);
     }
 
 
-    static class ValueMapperProcessor<K, V, OV> extends AbstractProcessor<K, V, K, OV> {
-        private final ValueMapperAction<K, V, OV> valueMapperAction;
-        private StreamContext<K, V, K, OV> context;
+    static class ValueMapperProcessor<T, O> extends AbstractProcessor<T> {
+        private final ValueMapperAction<T, O> valueMapperAction;
+        private StreamContext<T> context;
 
-        public ValueMapperProcessor(ValueMapperAction<K, V, OV> valueMapperAction) {
+        public ValueMapperProcessor(ValueMapperAction<T, O> valueMapperAction) {
             this.valueMapperAction = valueMapperAction;
         }
 
         @Override
-        public void preProcess(StreamContext<K, V, K, OV> context) {
+        public void preProcess(StreamContext<T> context) {
             this.context = context;
             this.context.init(super.getChildren());
         }
 
         @Override
-        public void process(Context<K, V> context) {
-            OV value = valueMapperAction.convert(context.getKey(), context.getValue());
-            Context<K, V> result = super.convert(context.value(value));
-            this.context.forward(result);
+        public void process(T data) {
+            O convert = valueMapperAction.convert(data);
+
+            if (convert instanceof Iterable) {
+                Iterable<? extends O> iterable = (Iterable<? extends O>) convert;
+                for (O item : iterable) {
+                    Context<Object, O> before = new Context<>(this.context.getKey(), item);
+                    Context<Object, T> result = convert(before);
+                    this.context.forward(result);
+                }
+            } else {
+                Context<Object, O> before = new Context<>(this.context.getKey(), convert);
+                Context<Object, T> result = convert(before);
+                this.context.forward(result);
+            }
         }
     }
 

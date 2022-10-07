@@ -20,6 +20,6 @@ public interface GroupedStream<K, V> {
 
     GroupedStream<K,Long> count();
 
-    RStream<K,V> toRStream();
+    RStream<V> toRStream();
 
 }

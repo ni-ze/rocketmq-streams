@@ -20,12 +20,12 @@ import org.apache.rocketmq.streams.running.Processor;
 
 import java.util.List;
 
-public interface RealProcessorFactory<K, V, OK, OV> {
+public interface RealProcessorFactory<T> {
     String getName();
 
-    Processor<K, V, OK, OV> build();
+    Processor<T> build();
 
-    void addChild(RealProcessorFactory<K, V, OK, OV> factory);
+    void addChild(RealProcessorFactory<T> factory);
 
-    List<RealProcessorFactory<K, V, OK, OV>> getChildren();
+    List<RealProcessorFactory<T>> getChildren();
 }

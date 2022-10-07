@@ -24,37 +24,38 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class KeySelectActionSupplier<K, V, NK> implements Supplier<Processor<K, V, NK, V>> {
-    private final KeySelectAction<K, V, NK> keySelectAction;
+public class KeySelectActionSupplier<T, KEY> implements Supplier<Processor<T>> {
+    private final KeySelectAction<T, KEY> keySelectAction;
 
-    public KeySelectActionSupplier(KeySelectAction<K, V, NK> keySelectAction) {
+    public KeySelectActionSupplier(KeySelectAction<T, KEY> keySelectAction) {
         this.keySelectAction = keySelectAction;
     }
 
     @Override
-    public Processor<K, V, NK, V> get() {
+    public Processor<T> get() {
         return new MapperProcessor(keySelectAction);
     }
 
-    private class MapperProcessor extends AbstractProcessor<K, V, NK, V> {
-        private final KeySelectAction<K, V, NK> keySelectAction;
-        private StreamContext<K, V, NK, V> streamContext;
+    private class MapperProcessor extends AbstractProcessor<T> {
+        private final KeySelectAction<T, KEY> keySelectAction;
+        private StreamContext<T> streamContext;
 
-        public MapperProcessor(KeySelectAction<K, V, NK> keySelectAction) {
+        public MapperProcessor(KeySelectAction<T, KEY> keySelectAction) {
             this.keySelectAction = keySelectAction;
         }
 
         @Override
-        public void preProcess(StreamContext<K, V, NK, V> context) {
+        public void preProcess(StreamContext<T> context) {
             this.streamContext = context;
             this.streamContext.init(super.getChildren());
         }
 
         @Override
-        public void process(Context<K, V> context) {
-            NK newKey = keySelectAction.select(context.getKey(), context.getValue());
-            Context<K, V> result = super.convert(context.key(newKey));
-            this.streamContext.forward(result);
+        public void process(T data) {
+            KEY newKey = keySelectAction.select(data);
+
+            Context<KEY, T> context = new Context<>(newKey, data);
+            this.streamContext.forward(context);
         }
     }
 }

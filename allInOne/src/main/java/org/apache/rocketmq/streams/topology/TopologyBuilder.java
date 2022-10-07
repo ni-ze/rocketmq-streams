@@ -33,18 +33,18 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 public class TopologyBuilder {
-    private final LinkedHashMap<String/*source topic*/, SourceFactory<?, ?, ?, ?>> topic2SourceNodeFactory = new LinkedHashMap<>();
+    private final LinkedHashMap<String/*source topic*/, SourceFactory<?>> topic2SourceNodeFactory = new LinkedHashMap<>();
 
-    private final LinkedHashMap<String/*name*/, RealProcessorFactory<?, ?, ?, ?>> realNodeFactory = new LinkedHashMap<>();
+    private final LinkedHashMap<String/*name*/, RealProcessorFactory<?>> realNodeFactory = new LinkedHashMap<>();
 
-    private final LinkedHashMap<String/*sink topic*/, RealProcessorFactory<?, ?, ?, ?>> topic2SinkNodeFactory = new LinkedHashMap<>();
+    private final LinkedHashMap<String/*sink topic*/, RealProcessorFactory<?>> topic2SinkNodeFactory = new LinkedHashMap<>();
 
     private final HashMap<String/*source name*/, List<String/*subsequent processor without source*/>> source2Group = new HashMap<>();
 
-    private final HashMap<String, StatefulProcessorFactory<?, ?, ?, ?>> name2StateStore = new HashMap<>();
+    private final HashMap<String, StatefulProcessorFactory<?,?>> name2StateStore = new HashMap<>();
 
-    public <K, V, OK, OV> void addRealSource(String name, String topicName, Supplier<Processor<K, V, OK, OV>> supplier) {
-        SourceFactory<K, V, OK, OV> sourceFactory = new SourceFactory<>(name, topicName, supplier);
+    public <T> void addRealSource(String name, String topicName, Supplier<Processor<T>> supplier) {
+        SourceFactory<T> sourceFactory = new SourceFactory<>(name, topicName, supplier);
 
         realNodeFactory.put(name, sourceFactory);
 
@@ -55,11 +55,11 @@ public class TopologyBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    public <K, V, OK, OV> void addRealNode(String name, String parentName, Supplier<? extends Processor<K, V, OK, OV>> supplier) {
-        RealProcessorFactory<K, V, OK, OV> processorFactory = new ProcessorFactory<>(name, supplier);
+    public <T> void addRealNode(String name, String parentName, Supplier<? extends Processor<T>> supplier) {
+        RealProcessorFactory<T> processorFactory = new ProcessorFactory<>(name, supplier);
         realNodeFactory.put(name, processorFactory);
 
-        RealProcessorFactory<K, V, OK, OV> parentFactory = (RealProcessorFactory<K, V, OK, OV>) realNodeFactory.get(parentName);
+        RealProcessorFactory<T> parentFactory = (RealProcessorFactory<T>) realNodeFactory.get(parentName);
         parentFactory.addChild(processorFactory);
 
         grouping(name, parentName);
@@ -67,26 +67,26 @@ public class TopologyBuilder {
 
 
     @SuppressWarnings("unchecked")
-    public <K, V, OK, OV> void addStatefulRealNode(String name, String parentName, StateStore<K, V> stateStore, Supplier<? extends Processor<K, V, OK, OV>> supplier) {
-        StatefulProcessorFactory<K, V, OK, OV> processorFactory = new StatefulProcessorFactory<>(name, supplier);
+    public <K, V> void addStatefulRealNode(String name, String parentName, StateStore<K, V> stateStore, Supplier<Processor<V>> supplier) {
+        StatefulProcessorFactory<K, V> processorFactory = new StatefulProcessorFactory<>(name, supplier);
         processorFactory.setStateStore(stateStore);
         realNodeFactory.put(name, processorFactory);
 
         name2StateStore.put(name, processorFactory);
 
-        RealProcessorFactory<K, V, OK, OV> parentFactory = (RealProcessorFactory<K, V, OK, OV>) realNodeFactory.get(parentName);
+        RealProcessorFactory<V> parentFactory = (RealProcessorFactory<V>) realNodeFactory.get(parentName);
         parentFactory.addChild(processorFactory);
 
         grouping(name, parentName);
     }
 
     @SuppressWarnings("unchecked")
-    public <K, V, OK, OV> void addRealSink(String name, String parentName, String topicName, Supplier<? extends Processor<K, V, OK, OV>> supplier) {
-        SinkFactory<K, V, OK, OV> sinkFactory = new SinkFactory<>(name, supplier);
+    public <T> void addRealSink(String name, String parentName, String topicName, Supplier<Processor<T>> supplier) {
+        SinkFactory<T> sinkFactory = new SinkFactory<>(name, supplier);
         realNodeFactory.put(name, sinkFactory);
         topic2SinkNodeFactory.put(topicName, sinkFactory);
 
-        RealProcessorFactory<K, V, OK, OV> parentFactory = (RealProcessorFactory<K, V, OK, OV>) realNodeFactory.get(parentName);
+        RealProcessorFactory<T> parentFactory = (RealProcessorFactory<T>) realNodeFactory.get(parentName);
         parentFactory.addChild(sinkFactory);
 
         grouping(name, parentName);
@@ -149,9 +149,9 @@ public class TopologyBuilder {
 
 
     @SuppressWarnings("unchecked")
-    public <K, V, OK, OV> Processor<K, V, OK, OV> build(String topicName) {
-        SourceFactory<K, V, OK, OV> sourceFactory = (SourceFactory<K, V, OK, OV>) topic2SourceNodeFactory.get(topicName);
-        Processor<K, V, OK, OV> sourceProcessor = sourceFactory.build();
+    public <T> Processor<T> build(String topicName) {
+        SourceFactory<T> sourceFactory = (SourceFactory<T>) topic2SourceNodeFactory.get(topicName);
+        Processor<T> sourceProcessor = sourceFactory.build();
 
         String sourceName = sourceFactory.getName();
         //集合中的顺序就是算子的父子顺序，前面的是后面的父亲节点
@@ -162,10 +162,10 @@ public class TopologyBuilder {
         return sourceProcessor;
     }
 
-    private <K, V, OK, OV> void doBuild(final Processor<K, V, OK, OV> parent, List<RealProcessorFactory<K, V, OK, OV>> childrenFactory) {
+    private <T> void doBuild(final Processor<T> parent, List<RealProcessorFactory<T>> childrenFactory) {
 
-        for (RealProcessorFactory<K, V, OK, OV> childRealProcessorFactory : childrenFactory) {
-            Processor<K, V, OK, OV> child = childRealProcessorFactory.build();
+        for (RealProcessorFactory<T> childRealProcessorFactory : childrenFactory) {
+            Processor<T> child = childRealProcessorFactory.build();
             parent.addChild(child);
 
             doBuild(child, childRealProcessorFactory.getChildren());

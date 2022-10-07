@@ -21,12 +21,12 @@ import org.apache.rocketmq.streams.topology.TopologyBuilder;
 
 import java.util.function.Supplier;
 
-public class SinkGraphNode<K, V,OK,OV> extends AbstractGraphNode {
-    private final Supplier<? extends Processor<K, V, OK,OV>> supplier;
+public class SinkGraphNode<T> extends AbstractGraphNode {
+    private final Supplier<Processor<T>> supplier;
     private final String topicName;
     private final String parentName;
 
-    public SinkGraphNode(String name, String parentName, String topicName, Supplier<? extends Processor<K, V,OK,OV>> supplier) {
+    public SinkGraphNode(String name, String parentName, String topicName, Supplier<Processor<T>> supplier) {
         super(name);
         this.topicName = topicName;
         this.supplier = supplier;

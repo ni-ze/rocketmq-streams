@@ -24,38 +24,39 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class FilterActionSupplier<K, V> implements Supplier<Processor<K, V, K, V>> {
-    private FilterAction<K, V> filterAction;
+public class FilterActionSupplier<T> implements Supplier<Processor<T>> {
+    private FilterAction<T> filterAction;
 
-    public FilterActionSupplier(FilterAction<K, V> filterAction) {
+    public FilterActionSupplier(FilterAction<T> filterAction) {
         this.filterAction = filterAction;
     }
 
     @Override
-    public Processor<K, V, K, V> get() {
+    public Processor<T> get() {
         return new FilterProcessor(filterAction);
     }
 
-    private class FilterProcessor extends AbstractProcessor<K, V, K, V> {
-        private final FilterAction<K, V> filterAction;
-        private StreamContext<K, V, K, V>  context;
+    private class FilterProcessor extends AbstractProcessor<T> {
+        private final FilterAction<T> filterAction;
+        private StreamContext<T>  context;
 
-        public FilterProcessor(FilterAction<K, V> filterAction) {
+        public FilterProcessor(FilterAction<T> filterAction) {
             this.filterAction = filterAction;
         }
 
 
         @Override
-        public void preProcess(StreamContext<K, V, K, V>  context) {
+        public void preProcess(StreamContext<T>  context) {
             this.context = context;
             this.context.init(super.getChildren());
         }
 
         @Override
-        public  void process(Context<K, V> context) {
-            boolean pass = filterAction.apply(context.getKey(), context.getValue());
+        public  void process(T data) {
+            boolean pass = filterAction.apply(data);
             if (pass) {
-                this.context.forward(context);
+                Context<Object, T> result = new Context<>(this.context.getKey(), data);
+                this.context.forward(result);
             }
         }
     }

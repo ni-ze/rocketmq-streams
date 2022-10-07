@@ -64,7 +64,7 @@ public class GroupedStreamImpl<K, V> implements GroupedStream<K, V> {
     }
 
     @Override
-    public RStream<K, V> toRStream() {
+    public RStream<V> toRStream() {
         return new RStreamImpl<>(this.pipeline, parent);
     }
 }

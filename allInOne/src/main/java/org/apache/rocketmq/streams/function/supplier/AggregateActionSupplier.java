@@ -25,7 +25,7 @@ import org.apache.rocketmq.streams.state.StateStore;
 
 import java.util.function.Supplier;
 
-public class AggregateActionSupplier<K, V, OV> implements Supplier<Processor<K, V, K, OV>> {
+public class AggregateActionSupplier<K, V, OV> implements Supplier<Processor<V>> {
     private final String currentName;
     private final String parentName;
     private StateStore<K, OV> stateStore;
@@ -43,17 +43,17 @@ public class AggregateActionSupplier<K, V, OV> implements Supplier<Processor<K, 
     }
 
     @Override
-    public Processor<K, V, K, OV> get() {
+    public Processor<V> get() {
         return new AggregateProcessor(currentName, parentName, stateStore, initAction, aggregateAction);
     }
 
-    private class AggregateProcessor extends AbstractProcessor<K, V, K, OV> {
+    private class AggregateProcessor extends AbstractProcessor<V> {
         private final String currentName;
         private final String parentName;
         private final Supplier<OV> initAction;
         private final StateStore<K, OV> stateStore;
         private final AggregateAction<K, V, OV> aggregateAction;
-        private StreamContext<K, V, K, OV> context;
+        private StreamContext<V> context;
 
         public AggregateProcessor(String currentName, String parentName,
                                   StateStore<K, OV> stateStore, Supplier<OV> initAction,
@@ -63,28 +63,48 @@ public class AggregateActionSupplier<K, V, OV> implements Supplier<Processor<K, 
             this.initAction = initAction;
             this.stateStore = stateStore;
             this.aggregateAction = aggregateAction;
+
+            this.stateStore.init();
         }
 
         @Override
-        public void preProcess(StreamContext<K, V, K, OV> context) {
+        public void preProcess(StreamContext<V> context) {
             this.context = context;
             this.context.init(super.getChildren());
         }
 
         @Override
-        public void process(Context<K, V> context) {
-            K key = context.getKey();
+        public void process(V data) {
+            K key = this.context.getKey();
             OV value = stateStore.get(key);
             if (value == null) {
                 value = initAction.get();
             }
-            OV out = aggregateAction.calculate(key, context.getValue(), value);
 
-            stateStore.put(key, out);
+            OV result = aggregateAction.calculate(key, data, value);
 
-            Context<K, V> result = super.convert(context.value(out));
+            stateStore.put(key, result);
 
-            this.context.forward(result);
+            Context<K, V> convert = super.convert(new Context<>(key, result));
+
+            this.context.forward(convert);
         }
+
+        //1
+//        @Override
+//        public void process(Context<K, V> context) {
+//            K key = context.getKey();
+//            OV value = stateStore.get(key);
+//            if (value == null) {
+//                value = initAction.get();
+//            }
+//            OV out = aggregateAction.calculate(key, context.getValue(), value);
+//
+//            stateStore.put(key, out);
+//
+//            Context<K, V> result = super.convert(context.value(out));
+//
+//            this.context.forward(result);
+//        }
     }
 }

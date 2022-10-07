@@ -19,16 +19,13 @@ package org.apache.rocketmq.streams.running;
 import org.apache.rocketmq.streams.metadata.Context;
 
 public interface Processor<T> extends AutoCloseable {
-    void addChild(Processor<K, V, OK, OV> processor);
+    void addChild(Processor<T> processor);
 
 
-    void preProcess(StreamContext<K, V, OK, OV> context);
+    void preProcess(StreamContext<T> context);
 
 
-    void process(Context<K, V> data);
+    void process(T data);
 
-    @SuppressWarnings("unchecked")
-    default Context<K, V> convert(Context<?, ?> data){
-        return (Context<K, V>) new Context<>(data.getKey(), data.getValue());
-    }
+
 }

@@ -16,36 +16,35 @@ package org.apache.rocketmq.streams.function.supplier;
  * limitations under the License.
  */
 
-import org.apache.rocketmq.streams.metadata.Context;
 import org.apache.rocketmq.streams.running.AbstractProcessor;
 import org.apache.rocketmq.streams.running.Processor;
 import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class PrintActionSupplier<K, V,OK,OV> implements Supplier<Processor<K, V,OK,OV>> {
+public class PrintActionSupplier<T> implements Supplier<Processor<T>> {
 
 
     @Override
-    public Processor<K, V,OK,OV> get() {
+    public Processor<T> get() {
         return new PrintProcessor<>();
     }
 
-    static class PrintProcessor<K, V,OK,OV> extends AbstractProcessor<K, V,OK,OV> {
-        private StreamContext streamContext;
+    static class PrintProcessor<T> extends AbstractProcessor<T> {
+        private StreamContext<T> streamContext;
 
         public PrintProcessor() {
         }
 
         @Override
-        public void preProcess(StreamContext context) {
+        public void preProcess(StreamContext<T> context) {
             this.streamContext = context;
             this.streamContext.init(super.getChildren());
         }
 
         @Override
-        public void process(Context<K, V> context) {
-            System.out.println("print sink: " + context);
+        public void process(T data) {
+            System.out.println("print sink: " + "key:[" + this.streamContext.getKey() + "]" + "value:[" + data + "]");
         }
     }
 

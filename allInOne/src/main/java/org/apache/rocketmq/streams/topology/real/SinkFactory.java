@@ -22,12 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class SinkFactory<K, V, OK, OV> implements RealProcessorFactory<K, V, OK, OV> {
+public class SinkFactory<T> implements RealProcessorFactory<T> {
     private final String name;
-    private final List<RealProcessorFactory<K, V, OK, OV>> children = new ArrayList<>();
-    private final Supplier<? extends Processor<K, V, OK, OV>> supplier;
+    private final List<RealProcessorFactory<T>> children = new ArrayList<>();
+    private final Supplier<? extends Processor<T>> supplier;
 
-    public SinkFactory(String name, Supplier<? extends Processor<K, V, OK, OV>> supplier) {
+    public SinkFactory(String name, Supplier<? extends Processor<T>> supplier) {
         this.name = name;
         this.supplier = supplier;
     }
@@ -39,17 +39,17 @@ public class SinkFactory<K, V, OK, OV> implements RealProcessorFactory<K, V, OK,
     }
 
     @Override
-    public Processor<K, V, OK, OV> build() {
+    public Processor<T> build() {
         return supplier.get();
     }
 
     @Override
-    public void addChild(RealProcessorFactory<K, V, OK, OV> factory) {
+    public void addChild(RealProcessorFactory<T> factory) {
         this.children.add(factory);
     }
 
     @Override
-    public List<RealProcessorFactory<K, V, OK, OV>> getChildren() {
+    public List<RealProcessorFactory<T>> getChildren() {
         return this.children;
     }
 }

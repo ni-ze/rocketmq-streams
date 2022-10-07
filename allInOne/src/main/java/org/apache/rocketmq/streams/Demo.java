@@ -18,11 +18,15 @@ package org.apache.rocketmq.streams;
 
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.streams.common.Constant;
+import org.apache.rocketmq.streams.function.KeySelectAction;
+import org.apache.rocketmq.streams.function.ValueMapperAction;
 import org.apache.rocketmq.streams.rstream.RStream;
 import org.apache.rocketmq.streams.rstream.StreamBuilder;
 import org.apache.rocketmq.streams.serialization.Wrapper;
 import org.apache.rocketmq.streams.topology.TopologyBuilder;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -32,8 +36,21 @@ public class Demo {
 
         RStream<String> rStream = builder.source("sourceTopic");
 
-        rStream.map((value) -> value)
-                .filter(Objects::nonNull)
+        rStream.flatMapValues(new ValueMapperAction<String, List<String>>() {
+                    @Override
+                    public List<String> convert(String value) {
+                        String[] splits = value.toLowerCase().split("\\W+");
+                        return Arrays.asList(splits);
+                    }
+                })
+                .keyBy(new KeySelectAction<String, String>() {
+                    @Override
+                    public String select(String value) {
+                        return value;
+                    }
+                })
+                .count()
+                .toRStream()
                 .print();
 
         TopologyBuilder topologyBuilder = builder.build();

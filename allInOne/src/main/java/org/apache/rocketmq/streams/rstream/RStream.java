@@ -26,6 +26,8 @@ public interface RStream<T> {
 
     <O> RStream<O> map(ValueMapperAction<T, O> mapperAction);
 
+    <VR> RStream<T> flatMapValues(final ValueMapperAction<? super T, ? extends Iterable<? extends VR>> mapper);
+
     RStream<T> filter(FilterAction<T> predictor);
 
     <K> GroupedStream<T,K> keyBy(KeySelectAction<T, K> keySelectAction);

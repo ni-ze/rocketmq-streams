@@ -29,10 +29,10 @@ import java.util.function.Supplier;
 import static org.apache.rocketmq.streams.OperatorNameMaker.SHUFFLE_SINK_PREFIX;
 import static org.apache.rocketmq.streams.OperatorNameMaker.SHUFFLE_SOURCE_PREFIX;
 
-public class StatefulProcessorNode<K, V, OK, OV> extends ProcessorNode<K, V, OK, OV> {
+public class StatefulProcessorNode<T> extends ProcessorNode<T> {
     private static final String SUFFIX = "-shuffle";
 
-    public StatefulProcessorNode(String name, String parentName, Supplier<? extends Processor<K, V, OK, OV>> supplier) {
+    public StatefulProcessorNode(String name, String parentName, Supplier<Processor<T>> supplier) {
         super(name, parentName, supplier);
     }
 

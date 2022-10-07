@@ -20,8 +20,11 @@ import org.apache.rocketmq.streams.metadata.Context;
 
 import java.util.List;
 
-public interface StreamContext<K, V, OK, OV> {
-    void init(List<Processor<K, V, OK, OV>> childrenProcessors);
+public interface StreamContext<V> {
+    void init(List<Processor<V>> childrenProcessors);
 
-    void forward(Context<K, V> context);
+    <K> void setKey(K k);
+    <K> K getKey();
+
+    <K> void forward(Context<K, V> context);
 }

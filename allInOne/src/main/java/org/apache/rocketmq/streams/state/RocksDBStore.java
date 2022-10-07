@@ -22,13 +22,17 @@ import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.TtlDB;
+import org.rocksdb.WriteOptions;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 
 public class RocksDBStore<K, V> extends AbstractStore<K, V> {
     private static final String ROCKSDB_PATH = "/tmp/rocksdb";
     private RocksDB rocksDB;
     private volatile boolean created = false;
+    private WriteOptions writeOptions;
+
 
     private void createRocksDB() {
         try (final Options options = new Options().setCreateIfMissing(true)) {
@@ -50,6 +54,10 @@ public class RocksDBStore<K, V> extends AbstractStore<K, V> {
                 }
 
                 this.rocksDB = TtlDB.open(options, rocksdbFilePath, 10800, false);
+
+                writeOptions = new WriteOptions();
+                writeOptions.setSync(false);
+                writeOptions.setDisableWAL(true);
             } catch (RocksDBException e) {
                 throw new RuntimeException("create rocksdb error " + e.getMessage());
             }
@@ -70,13 +78,34 @@ public class RocksDBStore<K, V> extends AbstractStore<K, V> {
     }
 
     @Override
-    public V get(K v) {
-        return null;
+    public V get(K key) {
+        if (key == null) {
+            return null;
+        }
+
+        try {
+            byte[] bytes = ((String) key).getBytes(StandardCharsets.UTF_8);
+            byte[] valueBytes = rocksDB.get(bytes);
+
+            if (valueBytes == null || valueBytes.length == 0) {
+                return null;
+            }
+
+            return (V) new String(valueBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
     }
 
     @Override
-    public void put(K k, V v) {
-
+    public void put(K key, V value) {
+        try {
+            byte[] keyBytes = ((String) key).getBytes(StandardCharsets.UTF_8);
+            byte[] valueBytes = ((String) value).getBytes(StandardCharsets.UTF_8);
+            rocksDB.put(writeOptions, keyBytes, valueBytes);
+        } catch (Exception e) {
+            throw new RuntimeException("putWindowInstance to rocksdb error", e);
+        }
     }
 
     @Override

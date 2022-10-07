@@ -28,7 +28,7 @@ public class MessageQueueListenerWrapper implements MessageQueueListener {
     private final MessageQueueListener originListener;
     private final TopologyBuilder topologyBuilder;
 
-    private final HashMap<String, Processor<?, ?, ?, ?>> mq2Processor = new HashMap<>();
+    private final HashMap<String, Processor<?>> mq2Processor = new HashMap<>();
 
 
     public MessageQueueListenerWrapper(MessageQueueListener originListener, TopologyBuilder topologyBuilder) {
@@ -38,9 +38,6 @@ public class MessageQueueListenerWrapper implements MessageQueueListener {
 
     @Override
     public void messageQueueChanged(String topic, Set<MessageQueue> mqAll, Set<MessageQueue> mqDivided) {
-        //执行原始listener
-        originListener.messageQueueChanged(topic, mqAll, mqDivided);
-
         try {
             //todo 构建拓扑图，取得task
             buildTask(topic, mqDivided);
@@ -48,23 +45,27 @@ public class MessageQueueListenerWrapper implements MessageQueueListener {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+
+        //在构建好执行processor之后，才执行原始listener
+        originListener.messageQueueChanged(topic, mqAll, mqDivided);
+
     }
 
-    private <K, V, OK, OV> void buildTask(String topicName, Set<MessageQueue> mqDivided) {
-        Processor<K, V, OK, OV> processor = topologyBuilder.build(topicName);
+    private <T> void buildTask(String topicName, Set<MessageQueue> mqDivided) {
+        Processor<T> processor = topologyBuilder.build(topicName);
         for (MessageQueue messageQueue : mqDivided) {
             String key = buildKey(messageQueue.getTopic(), messageQueue.getQueueId());
             this.mq2Processor.put(key, processor);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    <K, V, OK, OV> Processor<K, V, OK, OV> selectProcessor(String topic, int queueId) {
-        String key = buildKey(topic, queueId);
-        return (Processor<K, V, OK, OV>) this.mq2Processor.get(key);
+     @SuppressWarnings("unchecked")
+    <T> Processor<T> selectProcessor(String key) {
+//        String key = buildKey(topic, queueId);
+        return (Processor<T>) this.mq2Processor.get(key);
     }
 
-    private String buildKey(String topic, int queueId) {
+    public String buildKey(String topic, int queueId) {
         return String.format(pattern, topic, queueId);
     }
 }

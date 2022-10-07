@@ -24,8 +24,6 @@ import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.common.message.MessageQueue;
 import org.apache.rocketmq.streams.common.Constant;
-import org.apache.rocketmq.streams.function.KeySelectAction;
-import org.apache.rocketmq.streams.metadata.Context;
 import org.apache.rocketmq.streams.serialization.Serde;
 import org.apache.rocketmq.streams.topology.TopologyBuilder;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
@@ -34,12 +32,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import static org.apache.rocketmq.common.message.MessageConst.PROPERTY_KEYS;
 import static org.apache.rocketmq.streams.metadata.StreamConfig.ROCKETMQ_STREAMS_CONSUMER_GROUP;
 
 public class WorkerThread extends Thread {
     private final TopologyBuilder topologyBuilder;
-    private final Engine<?, ?, ?, ?> engine;
+    private final Engine<?> engine;
     private final Properties properties;
 
     public WorkerThread(TopologyBuilder topologyBuilder, Properties properties) throws MQClientException {
@@ -59,7 +60,7 @@ public class WorkerThread extends Thread {
         DefaultMQAdminExt mqAdmin = rocketMQClient.getMQAdmin();
 
 
-        this.engine = new Engine<>(unionConsumer, producer, mqAdmin, wrapper::selectProcessor);
+        this.engine = new Engine<>(unionConsumer, producer, mqAdmin, wrapper::selectProcessor, wrapper::buildKey);
     }
 
     @Override
@@ -77,20 +78,22 @@ public class WorkerThread extends Thread {
 
 
     @SuppressWarnings("unchecked")
-    class Engine<K, V, OK, OV> {
+    class Engine<T> {
         private final DefaultLitePullConsumer unionConsumer;
         private final DefaultMQProducer producer;
         private final DefaultMQAdminExt mqAdmin;
-        private final KeySelectAction<String, Integer, Processor<K, V, OK, OV>> keySelectAction;
+        private final Function<String, Processor<T>> processorSelect;
+        private final BiFunction<String, Integer, String> keyBuilder;
         private volatile boolean running = false;
 
         public Engine(DefaultLitePullConsumer unionConsumer, DefaultMQProducer producer,
                       DefaultMQAdminExt mqAdmin,
-                      KeySelectAction<String, Integer, Processor<K, V, OK, OV>> keySelectAction) {
+                      Function<String, Processor<T>> processorSelect, BiFunction<String, Integer, String> keyBuilder) {
             this.unionConsumer = unionConsumer;
             this.producer = producer;
             this.mqAdmin = mqAdmin;
-            this.keySelectAction = keySelectAction;
+            this.processorSelect = processorSelect;
+            this.keyBuilder = keyBuilder;
         }
 
         //todo 恢复状态
@@ -116,8 +119,8 @@ public class WorkerThread extends Thread {
             }
 
             running = true;
-            //1、阻塞等待分配了哪些MQ
-            //2、然后加载状态
+            //todo 1、阻塞等待分配了哪些MQ
+            //todo 2、然后加载状态
 
             while (running) {
                 List<MessageExt> list = this.unionConsumer.poll(0);
@@ -133,9 +136,8 @@ public class WorkerThread extends Thread {
                         continue;
                     }
 
-                    Serde<V> serde = getSerde();
-                    V value = makeValue(serde, messageExt);
-                    Context<K, V> data = new Context<>(null, value);
+                    Serde<T> serde = getSerde();
+                    T value = makeValue(serde, messageExt);
 
                     String topic = messageExt.getTopic();
                     int queueId = messageExt.getQueueId();
@@ -144,11 +146,14 @@ public class WorkerThread extends Thread {
                     set.add(queue);
 
 
-                    Processor<K, V, OK, OV> processor = this.keySelectAction.select(topic, queueId);
+                    String key = keyBuilder.apply(topic, queueId);
+                    Processor<T> processor = this.processorSelect.apply(key);
 
-                    StreamContextImpl<K, V, OK, OV> context = new StreamContextImpl<>(serde, producer, mqAdmin, messageExt);
+                    StreamContextImpl<T> context = new StreamContextImpl<>(serde, producer, mqAdmin, messageExt);
+                    context.setKey(messageExt.getProperty(PROPERTY_KEYS));
+
                     processor.preProcess(context);
-                    processor.process(data);
+                    processor.process(value);
                 }
 
                 //todo 每次都提交位点消耗太大，后面改成拉取消息放入buffer的形式。
@@ -156,18 +161,18 @@ public class WorkerThread extends Thread {
             }
         }
 
-        private Serde<V> getSerde() throws Throwable {
+        private Serde<T> getSerde() throws Throwable {
             String serDe = WorkerThread.this.properties.getProperty(Constant.DEFAULT_SERDE_CLASS_CONFIG);
             Class<?> serDeClazz = Class.forName(serDe);
             if (!Serde.class.isAssignableFrom(serDeClazz)) {
                 throw new IllegalArgumentException("serde class must implements interface org.apache.rocketmq.streams.serialization.Serde");
             }
 
-            return (Serde<V>) serDeClazz.getDeclaredConstructor().newInstance();
+            return (Serde<T>) serDeClazz.getDeclaredConstructor().newInstance();
         }
 
 
-        private V makeValue(Serde<V> serde, MessageExt messageExt) throws Throwable {
+        private T makeValue(Serde<T> serde, MessageExt messageExt) throws Throwable {
             byte[] body = messageExt.getBody();
             return serde.deserializer().deserialize(body);
         }

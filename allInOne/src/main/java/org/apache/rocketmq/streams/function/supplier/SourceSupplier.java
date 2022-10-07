@@ -23,7 +23,7 @@ import org.apache.rocketmq.streams.running.StreamContext;
 
 import java.util.function.Supplier;
 
-public class SourceSupplier<K, V, OK, OV> implements Supplier<Processor<K, V, OK, OV>> {
+public class SourceSupplier<T> implements Supplier<Processor<T>> {
     private String topicName;
 
     public SourceSupplier(String topicName) {
@@ -31,22 +31,23 @@ public class SourceSupplier<K, V, OK, OV> implements Supplier<Processor<K, V, OK
     }
 
     @Override
-    public Processor<K, V, OK, OV> get() {
+    public Processor<T> get() {
         return new SourceProcessor();
     }
 
-    private class SourceProcessor extends AbstractProcessor<K, V, OK, OV> {
-        private StreamContext<K, V, OK, OV> context;
+    private class SourceProcessor extends AbstractProcessor<T> {
+        private StreamContext<T> context;
 
         @Override
-        public void preProcess(StreamContext<K, V, OK, OV> context) {
+        public void preProcess(StreamContext<T> context) {
             this.context = context;
             this.context.init(super.getChildren());
         }
 
         @Override
-        public void process(Context<K, V> context) {
-            this.context.forward(context);
+        public void process(T data) {
+            Context<Object, T> result = new Context<>(this.context.getKey(), data);
+            this.context.forward(result);
         }
     }
 }

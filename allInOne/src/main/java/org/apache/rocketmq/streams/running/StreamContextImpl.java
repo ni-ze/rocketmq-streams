@@ -36,15 +36,16 @@ import java.util.List;
  * 2、可以获得下一个执行节点
  * 3、可获得动态的运行时信息，例如正在处理的数据来自那个topic，MQ，偏移量多少；
  */
-public class StreamContextImpl<K, V, OK, OV> implements StreamContext<K, V, OK, OV> {
-    private final Serde<V> serde;
+public class StreamContextImpl<T> implements StreamContext<T> {
+    private final Serde<T> serde;
     private final DefaultMQProducer producer;
     private final DefaultMQAdminExt mqAdmin;
     private final MessageExt messageExt;
-    private final List<Processor<K, V, OK, OV>> childList = new ArrayList<>();
+    private final List<Processor<T>> childList = new ArrayList<>();
+    private Object key;
 
 
-    public StreamContextImpl(Serde<V> serde, DefaultMQProducer producer, DefaultMQAdminExt mqAdmin, MessageExt messageExt) {
+    public StreamContextImpl(Serde<T> serde, DefaultMQProducer producer, DefaultMQAdminExt mqAdmin, MessageExt messageExt) {
         this.serde = serde;
         this.producer = producer;
         this.mqAdmin = mqAdmin;
@@ -52,7 +53,7 @@ public class StreamContextImpl<K, V, OK, OV> implements StreamContext<K, V, OK, 
     }
 
     @Override
-    public void init(List<Processor<K, V, OK, OV>> childrenProcessors) {
+    public void init(List<Processor<T>> childrenProcessors) {
         this.childList.clear();
         if (childrenProcessors != null) {
             this.childList.addAll(childrenProcessors);
@@ -60,7 +61,18 @@ public class StreamContextImpl<K, V, OK, OV> implements StreamContext<K, V, OK, 
     }
 
     @Override
-    public void forward(Context<K, V> context) {
+    public <K> void setKey(K k) {
+        this.key = k;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <K> K getKey() {
+        return (K) this.key;
+    }
+
+    @Override
+    public <K> void forward(Context<K, T> context) {
         if (childList.size() == 0 && !StringUtils.isEmpty(context.getSinkTopic())) {
             //todo 创建compact topic
             //根据不同key选择不同MessageQueue写入消息；
@@ -79,22 +91,21 @@ public class StreamContextImpl<K, V, OK, OV> implements StreamContext<K, V, OK, 
             return;
         }
 
+        this.key = context.getKey();
 
-        List<Processor<K, V, OK, OV>> store = new ArrayList<>(childList);
+        List<Processor<T>> store = new ArrayList<>(childList);
 
-        for (Processor<K, V, OK, OV> processor : childList) {
+        for (Processor<T> processor : childList) {
 
             try {
                 processor.preProcess(this);
-                processor.process(context);
+                processor.process(context.getValue());
             } finally {
                 this.childList.clear();
                 this.childList.addAll(store);
             }
         }
     }
-
-
 
 
 }
