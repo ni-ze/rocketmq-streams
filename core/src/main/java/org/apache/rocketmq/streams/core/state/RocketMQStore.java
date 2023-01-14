@@ -388,6 +388,7 @@ public class RocketMQStore extends AbstractStore implements StateStore {
         return target;
     }
 
+    //static topic queue num changes with source topic.
     private void createStateTopic(String stateTopic) throws Exception {
         if (RocketMQUtil.checkWhetherExist(stateTopic)) {
             return;
@@ -396,7 +397,7 @@ public class RocketMQStore extends AbstractStore implements StateStore {
         String sourceTopic = stateTopic2SourceTopic(stateTopic);
         Pair<Integer, Set<String>> clustersPair = getTotalQueueNumAndClusters(sourceTopic);
 
-        RocketMQUtil.createStaticCompactTopic(mqAdmin, stateTopic, clustersPair.getKey(), clustersPair.getValue());
+        RocketMQUtil.createNormalTopic(mqAdmin, stateTopic, clustersPair.getKey(), clustersPair.getValue());
     }
 
     private Pair<Integer, Set<String>> getTotalQueueNumAndClusters(String sourceTopic) throws Exception {

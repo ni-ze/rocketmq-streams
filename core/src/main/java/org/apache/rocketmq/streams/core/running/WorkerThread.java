@@ -232,7 +232,7 @@ public class WorkerThread extends Thread {
             }
 
             for (String topicName : shuffleTopic) {
-                RocketMQUtil.createStaticTopic(mqAdmin, topicName, StreamConfig.SHUFFLE_TOPIC_QUEUE_NUM);
+                RocketMQUtil.createNormalTopic(mqAdmin, topicName, StreamConfig.SHUFFLE_TOPIC_QUEUE_NUM);
             }
         }
 
