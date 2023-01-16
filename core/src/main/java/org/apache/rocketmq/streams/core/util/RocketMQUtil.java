@@ -22,19 +22,18 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.TopicConfig;
+import org.apache.rocketmq.common.constant.PermName;
 import org.apache.rocketmq.common.protocol.ResponseCode;
 import org.apache.rocketmq.common.protocol.body.ClusterInfo;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.apache.rocketmq.srvutil.ServerUtil;
 import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.apache.rocketmq.tools.command.CommandUtil;
-import org.apache.rocketmq.tools.command.topic.UpdateStaticTopicSubCommand;
 import org.apache.rocketmq.tools.command.topic.UpdateTopicSubCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -54,7 +53,7 @@ public class RocketMQUtil {
             clusters = getCluster(mqAdmin);
         }
 
-        TopicConfig topicConfig = new TopicConfig(topicName, queueNum, queueNum);
+        TopicConfig topicConfig = new TopicConfig(topicName, queueNum, queueNum, PermName.PERM_READ | PermName.PERM_WRITE);
 
         for (String cluster : clusters) {
             Set<String> masterSet = CommandUtil.fetchMasterAddrByClusterName(mqAdmin, cluster);
@@ -71,72 +70,6 @@ public class RocketMQUtil {
         createNormalTopic(mqAdmin, topicName, queueNum, clusters);
     }
 
-    public static void createStaticCompactTopic(DefaultMQAdminExt mqAdmin, String topicName, int queueNum, Set<String> clusters) throws Exception {
-        if (check(mqAdmin, topicName)) {
-            logger.info("topic[{}] already exist.", topicName);
-            return;
-        }
-
-        if (clusters == null || clusters.size() == 0) {
-            clusters = getCluster(mqAdmin);
-        }
-
-
-        for (String cluster : clusters) {
-            createStaticTopicWithCommand(topicName, queueNum, new HashSet<>(), cluster, mqAdmin.getNamesrvAddr());
-            logger.info("【step 1】create static topic:[{}] in cluster:[{}] success, logic queue num:[{}].", topicName, cluster, queueNum);
-
-            update2CompactTopicWithCommand(topicName, queueNum, cluster, mqAdmin.getNamesrvAddr());
-            logger.info("【step 2】update static topic to compact topic success. topic:[{}], cluster:[{}]", topicName, cluster);
-        }
-
-        existTopic.add(topicName);
-        logger.info("create static-compact topic [{}] success, queue num [{}]", topicName, queueNum);
-    }
-
-    public static void createStaticTopic(DefaultMQAdminExt mqAdmin, String topicName, int queueNum) throws Exception {
-        if (check(mqAdmin, topicName)) {
-            logger.info("topic[{}] already exist.", topicName);
-            return;
-        }
-
-        Set<String> clusters = getCluster(mqAdmin);
-        for (String cluster : clusters) {
-            createStaticTopicWithCommand(topicName, queueNum, new HashSet<>(), cluster, mqAdmin.getNamesrvAddr());
-            logger.info("create static topic:[{}] in cluster:[{}] success, logic queue num:[{}].", topicName, cluster, queueNum);
-        }
-
-        existTopic.add(topicName);
-    }
-
-    private static void createStaticTopicWithCommand(String topic, int queueNum, Set<String> brokers, String cluster, String nameservers) throws Exception {
-        UpdateStaticTopicSubCommand cmd = new UpdateStaticTopicSubCommand();
-        Options options = ServerUtil.buildCommandlineOptions(new Options());
-        String[] args;
-        if (cluster != null) {
-            args = new String[]{
-                    "-c", cluster,
-                    "-t", topic,
-                    "-qn", String.valueOf(queueNum),
-                    "-n", nameservers
-            };
-        } else {
-            String brokerStr = String.join(",", brokers);
-            args = new String[]{
-                    "-b", brokerStr,
-                    "-t", topic,
-                    "-qn", String.valueOf(queueNum),
-                    "-n", nameservers
-            };
-        }
-
-        final CommandLine commandLine = ServerUtil.parseCmdLine("mqadmin " + cmd.commandName(), args, cmd.buildCommandlineOptions(options), new PosixParser());
-
-        String namesrvAddr = commandLine.getOptionValue('n');
-        System.setProperty(MixAll.NAMESRV_ADDR_PROPERTY, namesrvAddr);
-
-        cmd.execute(commandLine, options, null);
-    }
 
     private static void update2CompactTopicWithCommand(String topic, int queueNum, String cluster, String nameservers) throws Exception {
         UpdateTopicSubCommand command = new UpdateTopicSubCommand();

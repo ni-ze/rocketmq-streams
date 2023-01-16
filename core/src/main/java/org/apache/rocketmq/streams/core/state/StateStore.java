@@ -48,5 +48,6 @@ public interface StateStore extends AutoCloseable {
 
     void delete(byte[] key) throws Throwable;
 
+    //persist state into rocketmq
     void persist(Set<MessageQueue> messageQueue) throws Throwable;
 }

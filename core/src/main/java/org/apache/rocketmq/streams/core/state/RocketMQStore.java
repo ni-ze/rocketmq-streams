@@ -18,6 +18,8 @@ package org.apache.rocketmq.streams.core.state;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.rocketmq.client.consumer.DefaultLitePullConsumer;
+import org.apache.rocketmq.client.impl.consumer.AssignedMessageQueue;
+import org.apache.rocketmq.client.impl.consumer.DefaultLitePullConsumerImpl;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.CountDownLatch2;
 import org.apache.rocketmq.common.MixAll;
@@ -41,6 +43,7 @@ import org.apache.rocketmq.tools.admin.DefaultMQAdminExt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -176,6 +179,8 @@ public class RocketMQStore extends AbstractStore implements StateStore {
 
         Set<MessageQueue> stateTopicQueues = convertSourceTopicQueue2StateTopicQueue(messageQueues);
         for (MessageQueue stateTopicQueue : stateTopicQueues) {
+            //if the source queue is removed, skip it.
+
             String stateTopicQueueKey = buildKey(stateTopicQueue);
             Set<byte[]> keySet = super.getInCalculating(stateTopicQueueKey);
 
@@ -264,6 +269,7 @@ public class RocketMQStore extends AbstractStore implements StateStore {
                 for (String stateUniqueQueue : groupByUniqueQueue.keySet()) {
                     Set<byte[]> stateTopicQueueKey = super.getAll(stateUniqueQueue);
                     for (byte[] key : stateTopicQueueKey) {
+                        logger.info("remove state queue:{}, delete corresponding state from rocksdb", stateUniqueQueue);
                         this.rocksDBStore.deleteByKey(key);
                     }
                     super.removeAll(stateUniqueQueue);
@@ -271,6 +277,7 @@ public class RocketMQStore extends AbstractStore implements StateStore {
 
 
                 for (MessageQueue stateMessageQueue : stateTopicQueue) {
+                    logger.info("remove state queue:{}, remove corresponding recover lock.",stateMessageQueue);
                     this.recoveringQueueMutex.remove(stateMessageQueue);
                 }
             } catch (Throwable e) {
@@ -286,7 +293,7 @@ public class RocketMQStore extends AbstractStore implements StateStore {
     }
 
     private void pullToLast(DefaultLitePullConsumer consumer) throws Throwable {
-        Set<MessageQueue> readyToRecover = consumer.assignment();
+        Set<MessageQueue> readyToRecover = assignMessageQueue(consumer);//consumer.assignment();
         for (MessageQueue messageQueue : readyToRecover) {
             this.recoveringQueueMutex.computeIfAbsent(messageQueue, messageQueue1 -> new CountDownLatch2(1));
         }
@@ -311,11 +318,26 @@ public class RocketMQStore extends AbstractStore implements StateStore {
         }
 
         //恢复完毕；
-        Set<MessageQueue> recoverOver = consumer.assignment();
-        for (MessageQueue messageQueue : recoverOver) {
+        for (MessageQueue messageQueue : readyToRecover) {
             CountDownLatch2 waitPoint = this.recoveringQueueMutex.get(messageQueue);
             waitPoint.countDown();
         }
+    }
+
+    private Set<MessageQueue> assignMessageQueue(DefaultLitePullConsumer consumer) throws Throwable {
+        Class<? extends DefaultLitePullConsumer> consumerClass = consumer.getClass();
+
+        Field consumerImpl = consumerClass.getDeclaredField("defaultLitePullConsumerImpl");
+        consumerImpl.setAccessible(true);
+
+        DefaultLitePullConsumerImpl defaultLitePullConsumer = (DefaultLitePullConsumerImpl)consumerImpl.get(consumer);
+
+        Field assignedMessageQueueField = defaultLitePullConsumer.getClass().getDeclaredField("assignedMessageQueue");
+        assignedMessageQueueField.setAccessible(true);
+
+        AssignedMessageQueue assignedMessageQueue = (AssignedMessageQueue) assignedMessageQueueField.get(defaultLitePullConsumer);
+
+        return assignedMessageQueue.getAssignedMessageQueues();
     }
 
     //拉的数据越多，重放效率越高,
