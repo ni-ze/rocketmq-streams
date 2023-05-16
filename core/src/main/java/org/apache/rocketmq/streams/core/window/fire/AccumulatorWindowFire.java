@@ -74,10 +74,10 @@ public class AccumulatorWindowFire<K, R, V, OV> extends AbstractWindowFire<K, V>
                 Data<K, OV> result = new Data<>(value.getKey(), data, value.getRecordLastTimestamp(), header);
                 Data<K, V> convert = this.convert(result);
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("fire window, windowKey={}, search watermark={}, window: [{} - {}], data to next:[{}]", windowKey,
+
+                    logger.info("fire window, windowKey={}, search watermark={}, window: [{} - {}], data to next:[{}]", windowKey,
                             watermark, Utils.format(windowKey.getWindowStart()), Utils.format(windowEnd), convert);
-                }
+
 
                 context.forward(convert);
 

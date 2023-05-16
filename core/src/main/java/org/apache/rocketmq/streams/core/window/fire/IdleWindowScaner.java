@@ -34,6 +34,7 @@ public class IdleWindowScaner implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(IdleWindowScaner.class.getName());
 
     private final Integer maxIdleTime;
+    private final Integer allowDelay;
     private long sessionTimeOut = 0;
     private final ScheduledExecutorService executor;
 
@@ -47,8 +48,9 @@ public class IdleWindowScaner implements AutoCloseable {
     private final ConcurrentHashMap<WindowKey, JoinWindowFire<?, ?, ?, ?>> fireJoinWindowCallback = new ConcurrentHashMap<>(16);
 
 
-    public IdleWindowScaner(Integer maxIdleTime, ScheduledExecutorService executor) {
+    public IdleWindowScaner(Integer maxIdleTime, Integer allowDelay, ScheduledExecutorService executor) {
         this.maxIdleTime = maxIdleTime;
+        this.allowDelay = allowDelay;
         this.executor = executor;
         this.executor.scheduleAtFixedRate(() -> {
             try {
@@ -182,7 +184,7 @@ public class IdleWindowScaner implements AutoCloseable {
                 case JoinWindow:
                 case AggregateWindow: {
                     long windowSize = windowKey.getWindowEnd() - windowKey.getWindowStart();
-                    if (idleTime > this.maxIdleTime && idleTime > windowSize) {
+                    if (idleTime > this.maxIdleTime && idleTime > windowSize + allowDelay) {
                         try {
                             doFire(windowKey, type);
                         } finally {

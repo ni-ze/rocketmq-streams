@@ -20,6 +20,7 @@ package org.apache.rocketmq.streams.examples.window;
 import com.alibaba.fastjson.JSON;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.streams.core.RocketMQStream;
+import org.apache.rocketmq.streams.core.function.ForeachAction;
 import org.apache.rocketmq.streams.core.metadata.StreamConfig;
 import org.apache.rocketmq.streams.core.rstream.StreamBuilder;
 import org.apache.rocketmq.streams.core.window.Time;
@@ -46,6 +47,7 @@ public class WindowCount {
                     User user = JSON.parseObject(source, User.class);
                     return new Pair<>(null, user);
                 })
+                .foreach(System.out::println)
                 .selectTimestamp(User::getTimestamp)
                 .keyBy(User::getAge)
                 .window(WindowBuilder.tumblingWindow(Time.seconds(5)))

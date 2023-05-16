@@ -147,7 +147,8 @@ public class WorkerThread extends Thread {
                 }
             });
             Integer idleTime = (Integer) WorkerThread.this.properties.getOrDefault(StreamConfig.IDLE_TIME_TO_FIRE_WINDOW, 2000);
-            this.idleWindowScaner = new IdleWindowScaner(idleTime, executor);
+            Integer allowDelay = (Integer) WorkerThread.this.properties.getOrDefault(StreamConfig.ALLOW_LATENESS_MILLISECOND, StreamConfig.DEFAULT_ALLOW_LATE_MILLISECONDS);
+            this.idleWindowScaner = new IdleWindowScaner(idleTime, allowDelay, executor);
             WorkerThread.this.executor.scheduleAtFixedRate(() -> {
                 try {
                     doCommit(mq2Commit);

@@ -121,6 +121,7 @@ public class WindowAccumulatorSupplier<K, V, R, OV> implements Supplier<Processo
             long time = this.context.getDataTime();
 
             long watermark = this.watermark(time - allowDelay, stateTopicMessageQueue);
+            System.out.println("watermark: " + watermark + ",data time: " + time);
             if (time < watermark) {
                 //delay data.
                 logger.warn("discard delay data:[{}]. time of data:{}, watermark:{}", data, time, watermark);
@@ -128,9 +129,9 @@ public class WindowAccumulatorSupplier<K, V, R, OV> implements Supplier<Processo
             }
 
             //f(time) -> List<Window>
-            List<Window> windows = super.calculateWindow(windowInfo, time);
+            List<Window> windows = super.calculateWindow(windowInfo, time - allowDelay);
             for (Window window : windows) {
-                logger.debug("timestamp=" + time + ". time -> window: " + Utils.format(time) + "->" + window);
+                logger.debug("timestamp=" + (time - allowDelay) + ". time -> window: " + Utils.format(time - allowDelay) + "->" + window);
 
                 //f(Window + key, store) -> oldValue
                 //todo key 怎么转化成对应的string，只和key的值有关系
